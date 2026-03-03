@@ -1,0 +1,101 @@
+# Profils spécifiques au projet (fichiers/dossiers lourds ou temporaires)
+data/
+checkpoints/
+RERUN/
+camera_report/
+
+/experiments/step2d_so101_urdf/*.md
+/experiments/step2_sim/*.md
+/fixes&tools
+# Fichiers brouillons et doublons documentaires
+README_Fluidbot(old).md
+README_FluidVLA(new_WIP).md
+RESULTS copy.md
+test.md
+delete_files.py
+fluidvla_tableau_exhaustif.html
+fluidvla_tableau_exhaustif.md
+Conversation sur le remplacement du Transformer.md
+fluidbot_handoff.docx
+
+# Modèles et Poids ML
+*.pt
+*.pth
+*.safetensors
+*.ckpt
+*.h5
+*.onnx
+*.weights.h5
+*.pb
+
+# Environnements Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+.env
+.venv/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Outils de build et de distribution
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Éditeurs et IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.spyderproject
+.spyproject
+.pylintrc
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# Système d'exploitation
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+ehthumbs_vista.db
+[Tt]humbs.db
+$RECYCLE.BIN/
+desktop.ini
+
+# Logs et rapports
+*.log
+logs/
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/

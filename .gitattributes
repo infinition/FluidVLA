@@ -1,0 +1,37 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Code source
+*.py    text diff=python
+*.py[co] binary
+
+# Fichiers textes standards
+*.md    text diff=markdown
+*.txt   text
+*.json  text
+*.yaml  text
+*.yml   text
+*.html  text
+*.css   text
+*.js    text
+*.csv   text
+
+# Jupyter Notebooks
+*.ipynb text
+
+# Fichiers volumineux (Modèles Machine Learning / Checkpoints)
+*.pt    binary
+*.pth   binary
+*.ckpt  binary
+*.safetensors binary
+*.h5    binary
+*.onnx  binary
+*.weights.h5 binary
+
+# Images et documents
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.pdf   binary
+*.docx  binary
