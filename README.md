@@ -114,12 +114,12 @@ python experiments/step2_sim/train_step2.py --dataset ./data/step2 --epochs 50 -
 * Synaptic fatigue / Spatial pruning / Semantic inhibition
 * BeliefField (Persistent Memory) & Multi-Teacher Distillation (from Cosmos 2B / RT-2)
 
-See [ROADMAP.md](https://www.google.com/search?q=ROADMAP.md) for full details.
+See [ROADMAP.md](ROADMAP.md) for full details.
 
 ---
 
-## Results
-See [RESULTS.md](https://www.google.com/search?q=RESULTS.md) for full details.
+## Results & Structure
+See [RESULTS.md](RESULTS.md) for full benchmarks and [STRUCTURE.md](STRUCTURE.md) for project organization.
 
 ## 📚 References
 
