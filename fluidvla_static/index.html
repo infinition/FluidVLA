@@ -1,0 +1,2678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FluidVLA Platform</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root {
+  --bg: #091117;
+  --bg2: #101a21;
+  --bg3: #15232c;
+  --panel: rgba(14, 24, 31, 0.94);
+  --panel2: rgba(19, 32, 40, 0.96);
+  --line: #203542;
+  --line2: #2d4656;
+  --text: #dce7ef;
+  --muted: #86a2b4;
+  --soft: #5f7888;
+  --accent: #12d1a7;
+  --accent2: #68d8ff;
+  --gold: #f3b55d;
+  --red: #ff6d77;
+  --green: #3ee08f;
+  --shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
+  --font: 'IBM Plex Sans', sans-serif;
+  --mono: 'IBM Plex Mono', monospace;
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  background:
+    radial-gradient(circle at top left, rgba(104, 216, 255, 0.08), transparent 24%),
+    radial-gradient(circle at top right, rgba(18, 209, 167, 0.11), transparent 32%),
+    linear-gradient(180deg, #091117 0%, #0d161d 100%);
+  color: var(--text);
+  font-family: var(--font);
+  overflow: hidden;
+}
+
+a { color: inherit; }
+button, input, select, textarea { font: inherit; }
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.04); }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 999px; }
+
+#shell {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+#topbar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 16px 22px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: linear-gradient(180deg, rgba(10, 16, 21, 0.98), rgba(10, 16, 21, 0.86));
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  flex-shrink: 0;
+}
+
+.brand {
+  min-width: 220px;
+}
+
+.brand-kicker {
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent2);
+  margin-bottom: 4px;
+}
+
+.brand-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.brand-title span { color: var(--accent); }
+
+.brand-subtitle {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+#ws-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--soft);
+  box-shadow: 0 0 0 rgba(0,0,0,0);
+}
+
+#ws-dot.ok {
+  background: var(--green);
+  box-shadow: 0 0 14px rgba(62, 224, 143, 0.65);
+}
+
+#ws-dot.err {
+  background: var(--red);
+  box-shadow: 0 0 14px rgba(255, 109, 119, 0.55);
+}
+
+#tabs {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  overflow-x: auto;
+}
+
+.tab {
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--soft);
+  padding: 10px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  transition: 0.18s ease;
+  white-space: nowrap;
+}
+
+.tab:hover {
+  color: var(--text);
+  background: rgba(255,255,255,0.05);
+}
+
+.tab.active {
+  color: #041119;
+  background: linear-gradient(135deg, var(--accent2), var(--accent));
+}
+
+.toolbar {
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  border: 1px solid var(--line2);
+  background: rgba(255,255,255,0.03);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: 0.18s ease;
+}
+
+.btn:hover { border-color: var(--accent2); transform: translateY(-1px); }
+.btn.primary {
+  color: #041119;
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--accent2), var(--accent));
+}
+.btn.danger {
+  color: #ffd8dc;
+  background: rgba(255, 109, 119, 0.10);
+  border-color: rgba(255, 109, 119, 0.25);
+}
+.btn.subtle { padding: 8px 12px; font-size: 13px; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+#app {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+#sidebar {
+  width: 300px;
+  flex-shrink: 0;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  background: linear-gradient(180deg, rgba(9, 17, 23, 0.96), rgba(9, 17, 23, 0.88));
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.side-head {
+  padding: 18px 18px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.side-kicker {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.side-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-top: 6px;
+}
+
+.side-copy {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+#experiment-list {
+  padding: 12px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.exp-card {
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(19, 32, 40, 0.94), rgba(12, 21, 27, 0.94));
+  padding: 14px;
+  cursor: pointer;
+  transition: 0.18s ease;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+.exp-card:hover {
+  border-color: rgba(104, 216, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.exp-card.active {
+  border-color: rgba(18, 209, 167, 0.5);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 0 0 1px rgba(18, 209, 167, 0.12);
+}
+
+.exp-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.exp-kicker {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent2);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--muted);
+}
+
+.exp-title {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.exp-summary {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.45;
+  margin-top: 6px;
+}
+
+.exp-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.exp-stat {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 12px;
+  padding: 8px;
+}
+
+.exp-stat-value {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.exp-stat-label {
+  margin-top: 3px;
+  font-size: 10px;
+  color: var(--soft);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+#content {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel {
+  display: none;
+  flex: 1;
+  min-height: 0;
+}
+
+.panel.active { display: flex; }
+
+#panel-overview,
+#panel-scoreboard,
+#panel-outputs {
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 24px;
+  gap: 18px;
+}
+
+#panel-experiments {
+  min-height: 0;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(320px, 0.9fr);
+  gap: 18px;
+}
+
+.surface {
+  background: linear-gradient(180deg, rgba(20, 33, 42, 0.92), rgba(12, 20, 27, 0.96));
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+}
+
+.surface.pad { padding: 22px; }
+
+.hero-title {
+  font-size: 34px;
+  line-height: 1.08;
+  font-weight: 700;
+  max-width: 14ch;
+}
+
+.hero-copy {
+  margin-top: 14px;
+  color: var(--muted);
+  line-height: 1.65;
+  font-size: 15px;
+  max-width: 74ch;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.chip {
+  padding: 9px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.metric-card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025));
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 18px;
+  padding: 16px;
+}
+
+.metric-kicker {
+  font-size: 11px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--soft);
+}
+
+.metric-value {
+  font-size: 30px;
+  font-weight: 700;
+  margin-top: 8px;
+}
+
+.metric-note {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+.section-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.section-kicker {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+}
+
+.section-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-top: 6px;
+}
+
+.section-copy {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.55;
+  margin-top: 8px;
+}
+
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.mini-exp-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.mini-exp {
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 18px;
+  background: rgba(255,255,255,0.03);
+  padding: 14px;
+}
+
+.mini-exp-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.mini-exp-copy {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-top: 6px;
+}
+
+.mini-exp-footer {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.mini-pill {
+  border-radius: 999px;
+  padding: 6px 8px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.05);
+  color: var(--soft);
+  font-size: 11px;
+}
+
+.detail-shell {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(360px, 0.95fr) minmax(420px, 1.2fr);
+  gap: 18px;
+  padding: 22px;
+}
+
+.detail-column {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.scroll-y { overflow-y: auto; min-height: 0; }
+
+.detail-title {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.05;
+}
+
+.detail-copy {
+  margin-top: 12px;
+  color: var(--muted);
+  line-height: 1.65;
+  font-size: 15px;
+}
+
+.path-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.path-card {
+  border-radius: 16px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  padding: 14px;
+}
+
+.path-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.path-title {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.path-body {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.55;
+  word-break: break-word;
+}
+
+.path-preview {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.path-preview span {
+  font-size: 12px;
+  color: var(--soft);
+  font-family: var(--mono);
+}
+
+.actions-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.action-card {
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.03);
+  padding: 16px;
+}
+
+.action-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.action-kind {
+  display: inline-flex;
+  margin-top: 6px;
+  padding: 6px 8px;
+  font-size: 11px;
+  border-radius: 999px;
+  background: rgba(18, 209, 167, 0.08);
+  border: 1px solid rgba(18, 209, 167, 0.18);
+  color: var(--accent);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.field.full { grid-column: 1 / -1; }
+
+.field label {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--soft);
+  margin-bottom: 6px;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--line2);
+  background: rgba(4, 10, 14, 0.34);
+  color: var(--text);
+  padding: 11px 12px;
+  outline: none;
+}
+
+.field textarea { min-height: 92px; resize: vertical; }
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--accent2);
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line2);
+  background: rgba(4, 10, 14, 0.34);
+}
+
+.toggle input { width: 18px; height: 18px; accent-color: var(--accent); }
+
+.action-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.console {
+  background: #071016;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 18px;
+  padding: 16px;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+}
+
+.console-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.console-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.console-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.console-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.console-metric {
+  border-radius: 999px;
+  padding: 7px 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.05);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.console-log {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.6;
+  color: #c0d0db;
+  white-space: pre-wrap;
+}
+
+.console-empty {
+  color: var(--soft);
+  padding: 26px 0;
+}
+
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.media-card {
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.03);
+}
+
+.media-preview {
+  background: #04090d;
+  min-height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.media-preview img,
+.media-preview video,
+.media-preview iframe {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  border: 0;
+}
+
+.media-placeholder {
+  padding: 24px;
+  text-align: center;
+  color: var(--soft);
+  line-height: 1.6;
+}
+
+.media-body {
+  padding: 14px;
+}
+
+.media-title {
+  font-size: 13px;
+  font-weight: 700;
+  word-break: break-word;
+}
+
+.media-meta {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--muted);
+  word-break: break-word;
+}
+
+.media-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.media-actions a {
+  flex: 1;
+  text-align: center;
+  text-decoration: none;
+  padding: 9px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--line2);
+  background: rgba(255,255,255,0.03);
+  font-size: 12px;
+}
+
+.score-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 14px;
+}
+
+.score-card {
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.025));
+  padding: 16px;
+}
+
+.score-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.score-title {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.score-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.score-value {
+  font-size: 30px;
+  font-weight: 700;
+  margin-top: 12px;
+}
+
+.score-notes {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.score-source {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--soft);
+  font-family: var(--mono);
+  word-break: break-word;
+}
+
+.score-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.score-form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.muted-box {
+  border: 1px dashed rgba(255,255,255,0.12);
+  border-radius: 18px;
+  padding: 22px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+#panel-interactive,
+#panel-dataset-explorer {
+  background:
+    radial-gradient(circle at top left, rgba(104, 216, 255, 0.08), transparent 30%),
+    radial-gradient(circle at top right, rgba(18, 209, 167, 0.08), transparent 24%),
+    linear-gradient(180deg, #081117, #0a141a);
+  padding: 22px;
+}
+
+.interactive-shell,
+.explorer-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  flex: 1;
+  min-height: 0;
+}
+
+.interactive-frame {
+  width: 100%;
+  height: 100%;
+  min-height: 760px;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 22px;
+  background: #04080b;
+}
+
+.explorer-layout {
+  display: grid;
+  grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+  gap: 18px;
+  flex: 1;
+  min-height: 0;
+}
+
+.explorer-side,
+.explorer-main {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.explorer-side .surface,
+.explorer-main .surface {
+  min-height: 0;
+}
+
+.explorer-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.explorer-toggle {
+  display: inline-flex;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.explorer-toggle button {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  padding: 9px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.explorer-toggle button.active {
+  background: linear-gradient(135deg, var(--accent2), var(--accent));
+  color: #041119;
+}
+
+.explorer-select {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--line2);
+  background: rgba(4, 10, 14, 0.34);
+  color: var(--text);
+  padding: 12px;
+}
+
+.explorer-search {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.025);
+  color: var(--text);
+  padding: 10px 12px;
+  outline: none;
+}
+
+.explorer-search::placeholder {
+  color: var(--soft);
+}
+
+.explorer-search:focus {
+  border-color: rgba(104, 216, 255, 0.34);
+  background: rgba(255,255,255,0.04);
+}
+
+.explorer-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.explorer-file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.explorer-file {
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.03);
+  padding: 12px;
+  cursor: pointer;
+  transition: 0.18s ease;
+}
+
+.explorer-file:hover {
+  border-color: rgba(104, 216, 255, 0.28);
+}
+
+.explorer-file.active {
+  border-color: rgba(18, 209, 167, 0.42);
+  box-shadow: inset 0 0 0 1px rgba(18, 209, 167, 0.14);
+}
+
+.explorer-file-name {
+  font-size: 13px;
+  font-weight: 700;
+  word-break: break-word;
+}
+
+.explorer-file-meta {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--muted);
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.explorer-file-path {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--soft);
+  font-family: var(--mono);
+  word-break: break-word;
+}
+
+.explorer-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.explorer-preview {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  gap: 18px;
+}
+
+.explorer-image-box {
+  min-height: 360px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: linear-gradient(180deg, rgba(5, 12, 16, 0.98), rgba(10, 18, 24, 0.96));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.explorer-image-box img {
+  width: 100%;
+  height: 100%;
+  max-height: 620px;
+  object-fit: contain;
+}
+
+.explorer-sidepanel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.explorer-control-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.explorer-control {
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.03);
+  padding: 12px;
+}
+
+.explorer-control.full {
+  grid-column: 1 / -1;
+}
+
+.explorer-control label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--soft);
+  margin-bottom: 8px;
+}
+
+.explorer-control input,
+.explorer-control select {
+  width: 100%;
+}
+
+.explorer-stat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.explorer-stat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.035);
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.explorer-stat-key {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.explorer-stat-value {
+  font-size: 13px;
+  font-weight: 700;
+  text-align: right;
+  word-break: break-word;
+}
+
+.explorer-code,
+.explorer-table {
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: #071016;
+  padding: 14px;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.6;
+  color: #c0d0db;
+  overflow: auto;
+}
+
+.explorer-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.explorer-chart {
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.03);
+  padding: 12px;
+}
+
+.explorer-chart-title {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.explorer-chart svg {
+  width: 100%;
+  height: 120px;
+}
+
+.explorer-empty {
+  min-height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px;
+  border: 1px dashed rgba(255,255,255,0.14);
+  border-radius: 24px;
+  color: var(--muted);
+  line-height: 1.7;
+  background: rgba(255,255,255,0.02);
+}
+
+.status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.status-card {
+  min-width: 160px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.status-label {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--soft);
+}
+
+.status-value {
+  margin-top: 6px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.tool-log {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: #071016;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.6;
+  color: #c0d0db;
+  white-space: pre-wrap;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.tool-placeholder {
+  min-height: 420px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px;
+  border: 1px dashed rgba(255,255,255,0.14);
+  border-radius: 24px;
+  color: var(--muted);
+  line-height: 1.7;
+  background: rgba(255,255,255,0.02);
+}
+
+#jobbar {
+  border-top: 1px solid rgba(255,255,255,0.06);
+  background: rgba(7, 15, 20, 0.9);
+  padding: 10px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.job-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.job-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--soft);
+}
+
+.job-pill.running .job-dot { background: var(--accent); box-shadow: 0 0 10px rgba(18, 209, 167, 0.6); }
+.job-pill.done .job-dot { background: var(--green); }
+.job-pill.error .job-dot { background: var(--red); }
+
+.hidden { display: none !important; }
+
+@media (max-width: 1280px) {
+  .detail-shell, .hero, .overview-grid, .explorer-layout, .explorer-preview { grid-template-columns: 1fr; }
+  .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .score-form { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 960px) {
+  #app { flex-direction: column; }
+  #sidebar {
+    width: 100%;
+    height: 260px;
+    border-right: 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .exp-stats, .grid-4, .mini-exp-grid, .score-form, .form-grid, .explorer-meta-grid, .explorer-control-grid { grid-template-columns: 1fr; }
+  #panel-interactive, #panel-dataset-explorer { padding: 14px; }
+}
+</style>
+</head>
+<body>
+<div id="shell">
+  <div id="topbar">
+    <div class="brand">
+      <div class="brand-kicker">FluidVLA Research Control</div>
+      <div class="brand-title">FLUID<span>VLA</span> Platform</div>
+      <div class="brand-subtitle">Modular hub to manage steps, artifacts, and the scoreboard.</div>
+    </div>
+    <div id="ws-dot" aria-label="WebSocket status"></div>
+    <div id="tabs">
+      <button class="tab active" data-tab="overview">Overview</button>
+      <button class="tab" data-tab="experiments">Experiments</button>
+      <button class="tab" data-tab="scoreboard">Scoreboard</button>
+      <button class="tab" data-tab="outputs">Outputs</button>
+      <button class="tab" data-tab="dataset-explorer">Dataset Explorer</button>
+      <button class="tab" data-tab="interactive">Interactive</button>
+    </div>
+    <div class="toolbar">
+      <button class="btn" id="refresh-btn">Refresh</button>
+    </div>
+  </div>
+
+  <div id="app">
+    <aside id="sidebar">
+      <div class="side-head">
+        <div class="side-kicker">Experiment Registry</div>
+        <div class="side-title">Active steps</div>
+        <div class="side-copy">Each step has its own card, actions, data paths, artifacts, and scoreboard section.</div>
+      </div>
+      <div id="experiment-list"></div>
+    </aside>
+
+    <main id="content">
+      <section id="panel-overview" class="panel active"></section>
+      <section id="panel-experiments" class="panel"></section>
+      <section id="panel-scoreboard" class="panel"></section>
+      <section id="panel-outputs" class="panel"></section>
+      <section id="panel-dataset-explorer" class="panel"></section>
+      <section id="panel-interactive" class="panel">
+        <div class="interactive-shell">
+          <div class="surface pad">
+            <div class="section-kicker">Narrative Layer</div>
+            <div class="section-title">Interactive project showcase</div>
+            <div class="section-copy">This view preserves the narrative showcase of the project, but the main control now goes through the platform's experiment registry.</div>
+            <div class="chip-row">
+              <a class="btn primary" href="/interactive" target="_blank" rel="noopener noreferrer">Open fullscreen interactive page</a>
+              <a class="btn" href="/medical-step0-results" target="_blank" rel="noopener noreferrer">Open medical exhaustive report</a>
+            </div>
+          </div>
+          <iframe class="interactive-frame" src="/interactive" loading="lazy" title="FluidVLA interactive presentation"></iframe>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="jobbar">
+    <span class="side-kicker">Live Jobs</span>
+    <div id="job-pills"></div>
+  </div>
+</div>
+
+<script>
+const S = {
+  activeTab: 'overview',
+  selectedExperimentId: null,
+  experiments: [],
+  experimentMap: {},
+  datasets: [],
+  checkpoints: [],
+  outputs: [],
+  scoreboard: { manual: [], auto: [], grouped: {} },
+  datasetExplorer: { dataset_dirs: [], checkpoint_dirs: [], default_dataset_dir: null, default_checkpoint_dir: null },
+  datasetExplorerView: { kind: 'dataset', directory: '', directoryMeta: null, files: [], selectedPath: '', inspection: null, error: '', loading: false, query: '' },
+  jobs: {},
+  jobLogs: {},
+  jobMetrics: {},
+  jobMeta: {},
+  activeJobId: null,
+  ws: null,
+};
+
+function fileUrl(absPath) {
+  return `/file?path=${encodeURIComponent(absPath)}`;
+}
+
+function downloadUrl(absPath) {
+  return `/file?path=${encodeURIComponent(absPath)}&download=1`;
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function jsStringLiteral(value) {
+  return JSON.stringify(String(value ?? ''));
+}
+
+function fmtNumber(value, digits = 4) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return 'n/a';
+  return num.toFixed(digits).replace(/\.0+$/, '').replace(/(\.\d*?)0+$/, '$1');
+}
+
+function fmtScore(entry) {
+  const unit = entry.unit ? ` ${entry.unit}` : '';
+  if (entry.unit === '%') return `${fmtNumber(entry.value, 2)}${unit}`;
+  if (entry.unit === 'episodes') return `${Math.round(Number(entry.value))}${unit}`;
+  return `${fmtNumber(entry.value, entry.unit === 'ms' ? 2 : 4)}${unit}`;
+}
+
+function getExperiment(id) {
+  return S.experimentMap[id] || null;
+}
+
+function latestJobForExperiment(experimentId) {
+  const entries = Object.entries(S.jobMeta)
+    .filter(([, meta]) => meta && meta.experiment_id === experimentId)
+    .sort((a, b) => a[0] < b[0] ? 1 : -1);
+  return entries.length ? entries[0][0] : null;
+}
+
+function applyState(payload) {
+  if (payload.datasets) S.datasets = payload.datasets;
+  if (payload.checkpoints) S.checkpoints = payload.checkpoints;
+  if (payload.outputs) S.outputs = payload.outputs;
+  if (payload.experiments) {
+    S.experiments = payload.experiments;
+    S.experimentMap = Object.fromEntries(payload.experiments.map(exp => [exp.id, exp]));
+    if (!S.selectedExperimentId && payload.experiments.length) {
+      S.selectedExperimentId = payload.experiments[0].id;
+    }
+  }
+  if (payload.scoreboard) S.scoreboard = payload.scoreboard;
+  if (payload.dataset_explorer) {
+    S.datasetExplorer = payload.dataset_explorer;
+    initDatasetExplorer();
+  }
+  if (payload.jobs) S.jobs = payload.jobs;
+  renderAll();
+}
+
+function connectWS() {
+  const ws = new WebSocket(`ws://${location.host}/ws`);
+  S.ws = ws;
+  ws.onopen = () => {
+    const dot = document.getElementById('ws-dot');
+    dot.className = 'ok';
+  };
+  ws.onclose = () => {
+    const dot = document.getElementById('ws-dot');
+    dot.className = 'err';
+    setTimeout(connectWS, 2500);
+  };
+  ws.onmessage = (event) => {
+    let payload = null;
+    try { payload = JSON.parse(event.data); } catch { return; }
+    handleWS(payload);
+  };
+}
+
+function handleWS(msg) {
+  const ev = msg.event;
+  if (ev === 'connected' || ev === 'state') {
+    applyState(msg);
+    return;
+  }
+
+  const jobId = msg.job_id;
+  if (!jobId) return;
+
+  if (!S.jobLogs[jobId]) S.jobLogs[jobId] = [];
+  if (!S.jobMetrics[jobId]) S.jobMetrics[jobId] = [];
+  if (!S.jobMeta[jobId]) S.jobMeta[jobId] = {};
+
+  if (msg.experiment_id) {
+    S.jobMeta[jobId].experiment_id = msg.experiment_id;
+  }
+  if (msg.action_id) {
+    S.jobMeta[jobId].action_id = msg.action_id;
+  }
+
+  if (ev === 'job_start') {
+    S.jobs[jobId] = { status: 'running' };
+    S.jobMeta[jobId] = { ...S.jobMeta[jobId], ...msg };
+    S.jobLogs[jobId].push(`> ${msg.cmd || 'job started'}`);
+    S.activeJobId = jobId;
+  }
+  if (ev === 'job_log') {
+    S.jobLogs[jobId].push(msg.line || '');
+    S.activeJobId = jobId;
+    appendConsoleLog(msg.line || '');
+    renderJobBar();
+    return;
+  }
+  if (ev === 'job_metric') {
+    S.jobMetrics[jobId].push(msg);
+    return;
+  }
+  if (ev === 'job_end') {
+    S.jobs[jobId] = { status: msg.status || 'done' };
+    if (msg.msg) S.jobLogs[jobId].push(`ERROR: ${msg.msg}`);
+    refreshState();
+  }
+
+  if (ev === 'infer_start') {
+    S.jobs[jobId] = { status: 'running' };
+    S.jobMeta[jobId] = { experiment_id: 'step1b_medical_msd', action_id: 'infer' };
+    S.jobLogs[jobId].push(`> medical infer | ${msg.model_type || ''} | ${msg.case || ''}`.trim());
+    S.activeJobId = jobId;
+  }
+  if (ev === 'infer_progress') {
+    S.jobMetrics[jobId].push({ metric: 'progress', value: msg.progress, label: msg.label });
+  }
+  if (ev === 'infer_metrics') {
+    S.jobMetrics[jobId].push(msg);
+  }
+  if (ev === 'infer_log') {
+    S.jobLogs[jobId].push(msg.line || '');
+    S.activeJobId = jobId;
+    appendConsoleLog(msg.line || '');
+    renderJobBar();
+    return;
+  }
+  if (ev === 'infer_done') {
+    S.jobs[jobId] = { status: 'done' };
+    S.jobLogs[jobId].push(`Inference complete. Files: ${(msg.files || []).length}`);
+    if (msg.summary) S.jobMetrics[jobId].push(msg.summary);
+    refreshState();
+  }
+  if (ev === 'infer_error') {
+    S.jobs[jobId] = { status: 'error' };
+    S.jobLogs[jobId].push(`ERROR: ${msg.msg || msg.returncode || 'unknown infer error'}`);
+  }
+
+  if (ev === 'train_start') {
+    S.jobs[jobId] = { status: 'running' };
+    S.jobMeta[jobId] = { experiment_id: 'step1b_medical_msd', action_id: 'train' };
+    S.jobLogs[jobId].push(`> ${msg.cmd || 'medical train started'}`);
+    S.activeJobId = jobId;
+  }
+  if (ev === 'train_log') {
+    S.jobLogs[jobId].push(msg.line || '');
+    S.activeJobId = jobId;
+    appendConsoleLog(msg.line || '');
+    renderJobBar();
+    return;
+  }
+  if (ev === 'train_metric') {
+    S.jobMetrics[jobId].push(msg);
+  }
+  if (ev === 'train_end') {
+    S.jobs[jobId] = { status: msg.status || 'done' };
+    refreshState();
+  }
+
+  renderAll();
+}
+
+function appendConsoleLog(line) {
+  const el = document.querySelector('#panel-experiments .console-log');
+  if (!el) return;
+  const wasAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+  el.textContent += (el.textContent ? '\n' : '') + line;
+  if (wasAtBottom) el.scrollTop = el.scrollHeight;
+}
+
+function captureScrollState() {
+  const selectors = [
+    '#panel-overview',
+    '#panel-scoreboard',
+    '#panel-outputs',
+    '#panel-dataset-explorer .explorer-file-list',
+    '#panel-dataset-explorer .explorer-main',
+    '#panel-experiments .detail-column.scroll-y',
+    '#panel-experiments .console-log',
+  ];
+  return selectors.flatMap(selector => Array.from(document.querySelectorAll(selector)).map((node, index) => ({
+    selector,
+    index,
+    top: node.scrollTop,
+    left: node.scrollLeft,
+  })));
+}
+
+function restoreScrollState(snapshot) {
+  if (!snapshot?.length) return;
+  window.requestAnimationFrame(() => {
+    snapshot.forEach(item => {
+      const node = document.querySelectorAll(item.selector)[item.index];
+      if (!node) return;
+      node.scrollTop = item.top;
+      node.scrollLeft = item.left;
+    });
+  });
+}
+
+async function refreshState() {
+  try {
+    const response = await fetch('/api/state');
+    const payload = await response.json();
+    applyState(payload);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+function setActiveTab(tabId) {
+  S.activeTab = tabId;
+  document.querySelectorAll('.tab').forEach(button => {
+    button.classList.toggle('active', button.dataset.tab === tabId);
+  });
+  document.querySelectorAll('.panel').forEach(panel => {
+    panel.classList.toggle('active', panel.id === `panel-${tabId}`);
+  });
+  document.getElementById('sidebar').classList.toggle('hidden', tabId === 'interactive' || tabId === 'dataset-explorer');
+  if (tabId === 'dataset-explorer') initDatasetExplorer();
+  renderAll();
+}
+
+function initDatasetExplorer(force = false) {
+  const overview = S.datasetExplorer || {};
+  const view = S.datasetExplorerView;
+  const datasetDefault = overview.default_dataset_dir;
+  const checkpointDefault = overview.default_checkpoint_dir;
+  if (!view.kind) view.kind = datasetDefault ? 'dataset' : 'checkpoint';
+  let nextDirectory = view.directory;
+  if (force || !nextDirectory) {
+    nextDirectory = view.kind === 'checkpoint' ? checkpointDefault : datasetDefault;
+  }
+  if (!nextDirectory) {
+    nextDirectory = datasetDefault || checkpointDefault || '';
+    view.kind = datasetDefault ? 'dataset' : 'checkpoint';
+  }
+  if (!nextDirectory) {
+    nextDirectory = preferredExplorerDir(explorerDirOptions(view.kind));
+  }
+  if (nextDirectory && (force || view.directory !== nextDirectory || !view.files.length)) {
+    loadExplorerDirectory(view.kind, nextDirectory);
+  }
+}
+
+function explorerDirOptions(kind) {
+  return kind === 'checkpoint' ? (S.datasetExplorer.checkpoint_dirs || []) : (S.datasetExplorer.dataset_dirs || []);
+}
+
+function preferredExplorerDir(options) {
+  return options.find(option => Number(option.file_count || 0) > 0)?.path || options[0]?.path || '';
+}
+
+function filteredExplorerFiles() {
+  const query = String(S.datasetExplorerView.query || '').trim().toLowerCase();
+  const files = S.datasetExplorerView.files || [];
+  if (!query) return files;
+  return files.filter(file => {
+    const haystack = [file.display_name, file.relative_path, file.file_type, file.category]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+    return haystack.includes(query);
+  });
+}
+
+function currentExplorerOptions() {
+  const controls = S.datasetExplorerView.inspection?.controls || {};
+  const options = {};
+  Object.entries(controls).forEach(([key, value]) => {
+    if (value && typeof value === 'object' && Object.prototype.hasOwnProperty.call(value, 'value') && value.value !== null && value.value !== undefined) {
+      options[key] = value.value;
+    }
+  });
+  return options;
+}
+
+async function loadExplorerDirectory(kind, dirPath, preferredPath = '') {
+  S.datasetExplorerView.kind = kind;
+  S.datasetExplorerView.directory = dirPath;
+  S.datasetExplorerView.loading = true;
+  S.datasetExplorerView.error = '';
+  renderAll();
+  try {
+    const url = `/api/dataset-explorer/list?kind=${encodeURIComponent(kind)}&dir=${encodeURIComponent(dirPath)}`;
+    const response = await fetch(url);
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || 'Unable to load directory');
+    S.datasetExplorerView.directoryMeta = payload.directory;
+    S.datasetExplorerView.files = payload.files || [];
+    const nextPath = preferredPath || S.datasetExplorerView.selectedPath;
+    const matched = payload.files.find(file => file.path === nextPath);
+    S.datasetExplorerView.selectedPath = matched ? matched.path : (payload.files[0]?.path || '');
+    S.datasetExplorerView.loading = false;
+    renderAll();
+    if (S.datasetExplorerView.selectedPath) {
+      inspectExplorerFile(S.datasetExplorerView.selectedPath);
+    } else {
+      S.datasetExplorerView.inspection = null;
+      renderAll();
+    }
+  } catch (error) {
+    S.datasetExplorerView.loading = false;
+    S.datasetExplorerView.error = error.message || String(error);
+    renderAll();
+  }
+}
+
+async function inspectExplorerFile(path, overrides = {}) {
+  if (!path) return;
+  S.datasetExplorerView.selectedPath = path;
+  S.datasetExplorerView.loading = true;
+  S.datasetExplorerView.error = '';
+  renderAll();
+  try {
+    const params = new URLSearchParams({ path });
+    Object.entries({ ...currentExplorerOptions(), ...overrides }).forEach(([key, value]) => {
+      if (value !== null && value !== undefined && value !== '') params.set(key, String(value));
+    });
+    const response = await fetch(`/api/dataset-explorer/inspect?${params.toString()}`);
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || 'Unable to inspect file');
+    S.datasetExplorerView.inspection = payload;
+    S.datasetExplorerView.loading = false;
+    renderAll();
+  } catch (error) {
+    S.datasetExplorerView.loading = false;
+    S.datasetExplorerView.error = error.message || String(error);
+    renderAll();
+  }
+}
+
+function setExplorerKind(kind) {
+  const options = explorerDirOptions(kind);
+  S.datasetExplorerView.kind = kind;
+  S.datasetExplorerView.directory = '';
+  S.datasetExplorerView.directoryMeta = null;
+  S.datasetExplorerView.files = [];
+  S.datasetExplorerView.selectedPath = '';
+  S.datasetExplorerView.inspection = null;
+  S.datasetExplorerView.query = '';
+  if (options.length) {
+    loadExplorerDirectory(kind, preferredExplorerDir(options));
+  } else {
+    renderAll();
+  }
+}
+
+function setExplorerSearch(value) {
+  S.datasetExplorerView.query = value;
+  renderAll();
+}
+
+function updateExplorerControl(name, value) {
+  const next = { ...currentExplorerOptions(), [name]: value };
+  inspectExplorerFile(S.datasetExplorerView.selectedPath, next);
+}
+
+function renderExplorerStats(summary = {}) {
+  return Object.entries(summary).map(([key, value]) => {
+    const display = Array.isArray(value) || (value && typeof value === 'object') ? JSON.stringify(value) : String(value ?? 'n/a');
+    return `<div class="explorer-stat"><div class="explorer-stat-key">${escapeHtml(key)}</div><div class="explorer-stat-value">${escapeHtml(display)}</div></div>`;
+  }).join('');
+}
+
+function renderExplorerChart(name, values = [], epochs = []) {
+  if (!values.length) return '';
+  const width = 240;
+  const height = 120;
+  const xs = epochs.length === values.length ? epochs : values.map((_, index) => index + 1);
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const minY = Math.min(...values);
+  const maxY = Math.max(...values);
+  const normX = (value) => maxX === minX ? 16 : 16 + ((value - minX) / (maxX - minX)) * (width - 32);
+  const normY = (value) => maxY === minY ? height / 2 : height - 16 - ((value - minY) / (maxY - minY)) * (height - 32);
+  const points = values.map((value, index) => `${normX(xs[index])},${normY(value)}`).join(' ');
+  return `
+    <div class="explorer-chart">
+      <div class="explorer-chart-title">${escapeHtml(name)}</div>
+      <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
+        <polyline points="${points}" fill="none" stroke="url(#line-${escapeHtml(name)})" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
+        <defs>
+          <linearGradient id="line-${escapeHtml(name)}" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#68d8ff"></stop>
+            <stop offset="100%" stop-color="#12d1a7"></stop>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>`;
+}
+
+function renderExplorerControls(inspection) {
+  const controls = inspection?.controls || {};
+  const blocks = [];
+  if (controls.sample_index) {
+    blocks.push(`
+      <div class="explorer-control full">
+        <label>Sample ${escapeHtml(String(controls.sample_index.value))}</label>
+        <input type="range" min="${controls.sample_index.min}" max="${controls.sample_index.max}" value="${controls.sample_index.value}" oninput="updateExplorerControl('sample_index', this.value)">
+      </div>`);
+  }
+  if (controls.step) {
+    blocks.push(`
+      <div class="explorer-control full">
+        <label>Step ${escapeHtml(String(controls.step.value))}</label>
+        <input type="range" min="${controls.step.min}" max="${controls.step.max}" value="${controls.step.value}" oninput="updateExplorerControl('step', this.value)">
+      </div>`);
+  }
+  if (controls.axis) {
+    blocks.push(`
+      <div class="explorer-control">
+        <label>Slice axis</label>
+        <select onchange="updateExplorerControl('axis', this.value)">
+          ${controls.axis.options.map(option => `<option value="${option}" ${Number(option) === Number(controls.axis.value) ? 'selected' : ''}>Axis ${option}</option>`).join('')}
+        </select>
+      </div>`);
+  }
+  if (controls.volume_index) {
+    blocks.push(`
+      <div class="explorer-control">
+        <label>Volume ${escapeHtml(String(controls.volume_index.value))}</label>
+        <input type="range" min="${controls.volume_index.min}" max="${controls.volume_index.max}" value="${controls.volume_index.value}" oninput="updateExplorerControl('volume_index', this.value)">
+      </div>`);
+  }
+  if (controls.slice_index) {
+    blocks.push(`
+      <div class="explorer-control full">
+        <label>Slice ${escapeHtml(String(controls.slice_index.value))}</label>
+        <input type="range" min="${controls.slice_index.min}" max="${controls.slice_index.max}" value="${controls.slice_index.value}" oninput="updateExplorerControl('slice_index', this.value)">
+      </div>`);
+  }
+  return blocks.length ? `<div class="explorer-control-grid">${blocks.join('')}</div>` : '';
+}
+
+function renderExplorerInspection() {
+  const inspection = S.datasetExplorerView.inspection;
+  if (S.datasetExplorerView.error) {
+    return `<div class="explorer-empty">${escapeHtml(S.datasetExplorerView.error)}</div>`;
+  }
+  if (S.datasetExplorerView.loading && !inspection) {
+    return '<div class="explorer-empty">Loading preview...</div>';
+  }
+  if (!inspection) {
+    return '<div class="explorer-empty">Select a file in the left column to inspect it.</div>';
+  }
+  const preview = inspection.preview || {};
+  const summary = inspection.summary || {};
+  const series = preview.series || {};
+  const chartKeys = Object.keys(series).filter(key => key !== 'epoch' && Array.isArray(series[key]));
+  const statsHtml = renderExplorerStats(summary);
+  const image = preview.image_base64 ? `<img src="data:image/png;base64,${preview.image_base64}" alt="dataset preview">` : '<div class="explorer-empty">No image available for this format. Metadata is shown on the right.</div>';
+  let detailHtml = '';
+  if (inspection.viewer === 'episode') {
+    detailHtml = `
+      ${renderExplorerControls(inspection)}
+      <div class="explorer-stat-list">${statsHtml}</div>
+      <div class="explorer-code">Action values\n${escapeHtml(JSON.stringify(preview.action_values || [], null, 2))}</div>
+      <div class="explorer-code">Proprio values\n${escapeHtml(JSON.stringify(preview.proprio_values || [], null, 2))}</div>`;
+  } else if (inspection.viewer === 'nifti' || inspection.viewer === 'mnist' || inspection.viewer === 'cifar' || inspection.viewer === 'numpy') {
+    detailHtml = `
+      ${renderExplorerControls(inspection)}
+      <div class="explorer-stat-list">${statsHtml}</div>
+      ${preview.label_name || preview.label !== undefined ? `<div class="explorer-code">Label\n${escapeHtml(String(preview.label_name || preview.label))}</div>` : ''}
+      ${preview.rows ? `<div class="explorer-code">Rows\n${escapeHtml(JSON.stringify(preview.rows, null, 2))}</div>` : ''}`;
+  } else if (inspection.viewer === 'json') {
+    detailHtml = `
+      <div class="explorer-stat-list">${statsHtml}</div>
+      ${chartKeys.length ? `<div class="explorer-chart-grid">${chartKeys.slice(0, 6).map(key => renderExplorerChart(key, series[key], series.epoch || [])).join('')}</div>` : ''}
+      <div class="explorer-code">JSON preview\n${escapeHtml(JSON.stringify(preview.data, null, 2))}</div>`;
+  } else if (inspection.viewer === 'checkpoint') {
+    detailHtml = `
+      <div class="explorer-stat-list">${statsHtml}</div>
+      ${preview.config ? `<div class="explorer-code">Config\n${escapeHtml(JSON.stringify(preview.config, null, 2))}</div>` : ''}
+      ${preview.layers?.length ? `<div class="explorer-code">Layers\n${escapeHtml(JSON.stringify(preview.layers, null, 2))}</div>` : ''}`;
+  } else if (inspection.viewer === 'numpy_bundle') {
+    detailHtml = `
+      <div class="explorer-stat-list">${statsHtml}</div>
+      <div class="explorer-code">Arrays\n${escapeHtml(JSON.stringify(preview.arrays || {}, null, 2))}</div>`;
+  } else {
+    detailHtml = `
+      <div class="explorer-stat-list">${statsHtml}</div>
+      <div class="explorer-code">Preview\n${escapeHtml(JSON.stringify(preview, null, 2))}</div>`;
+  }
+  return `
+    <div class="surface pad">
+      <div class="explorer-header">
+        <div>
+          <div class="section-kicker">Native Inspector</div>
+          <div class="section-title">${escapeHtml(inspection.name || 'File inspection')}</div>
+          <div class="section-copy">${escapeHtml(inspection.relative_path || '')}</div>
+        </div>
+        <div class="chip-row">
+          <a class="btn" href="${fileUrl(inspection.path)}" target="_blank" rel="noopener noreferrer">Open raw file</a>
+          <a class="btn" href="${downloadUrl(inspection.path)}">Download</a>
+        </div>
+      </div>
+      <div class="explorer-preview">
+        <div class="explorer-image-box">${image}</div>
+        <div class="explorer-sidepanel">${detailHtml}</div>
+      </div>
+    </div>`;
+}
+
+function selectExperiment(experimentId, forceTab = false) {
+  S.selectedExperimentId = experimentId;
+  if (forceTab) setActiveTab('experiments');
+  renderAll();
+}
+
+function groupedScores(experimentId) {
+  return S.scoreboard.grouped?.[experimentId] || [];
+}
+
+function renderExperimentList() {
+  const host = document.getElementById('experiment-list');
+  host.innerHTML = '';
+  S.experiments.forEach(exp => {
+    const card = document.createElement('div');
+    card.className = `exp-card ${S.selectedExperimentId === exp.id ? 'active' : ''}`;
+    card.innerHTML = `
+      <div class="exp-meta">
+        <div class="exp-kicker">${escapeHtml(exp.kicker)}</div>
+        <div class="badge">${escapeHtml(exp.category)} / ${escapeHtml(exp.status)}</div>
+      </div>
+      <div class="exp-title">${escapeHtml(exp.title)}</div>
+      <div class="exp-summary">${escapeHtml(exp.summary)}</div>
+      <div class="exp-stats">
+        <div class="exp-stat"><div class="exp-stat-value">${exp.counts.dataset_files}</div><div class="exp-stat-label">data</div></div>
+        <div class="exp-stat"><div class="exp-stat-value">${exp.counts.checkpoint_files}</div><div class="exp-stat-label">ckpt</div></div>
+        <div class="exp-stat"><div class="exp-stat-value">${exp.counts.output_files}</div><div class="exp-stat-label">outputs</div></div>
+        <div class="exp-stat"><div class="exp-stat-value">${groupedScores(exp.id).length}</div><div class="exp-stat-label">scores</div></div>
+      </div>
+    `;
+    card.onclick = () => selectExperiment(exp.id, true);
+    host.appendChild(card);
+  });
+}
+
+function renderOverview() {
+  const panel = document.getElementById('panel-overview');
+  const totalScores = Object.values(S.scoreboard.grouped || {}).reduce((acc, items) => acc + items.length, 0);
+  const mediaCount = S.experiments.reduce((acc, exp) => acc + (exp.media?.length || 0), 0);
+  const runningCount = Object.values(S.jobs).filter(job => job.status === 'running').length;
+  const selected = getExperiment(S.selectedExperimentId) || S.experiments[0];
+  const spotlightScores = selected ? groupedScores(selected.id).slice(0, 4) : [];
+
+  panel.innerHTML = `
+    <div class="hero">
+      <div class="surface pad">
+        <div class="section-kicker">Platform Direction</div>
+        <div class="hero-title">A modular platform to drive all FluidVLA experiments.</div>
+        <div class="hero-copy">The server is no longer medical-first only. It now exposes an experiment registry, declarative actions per step, an artifact gallery, and a persistent scoreboard that will survive upcoming roadmap steps.</div>
+        <div class="chip-row">
+          <div class="chip">${S.experiments.length} active steps</div>
+          <div class="chip">${mediaCount} media artifacts detected</div>
+          <div class="chip">${totalScores} persistent or auto-discovered scores</div>
+          <div class="chip">${runningCount} jobs running</div>
+        </div>
+      </div>
+      <div class="surface pad">
+        <div class="section-kicker">Selected Step</div>
+        <div class="section-title">${selected ? escapeHtml(selected.title) : 'No experiment loaded'}</div>
+        <div class="section-copy">${selected ? escapeHtml(selected.description) : 'Registry not loaded yet.'}</div>
+        <div class="chip-row">
+          <button class="btn primary" onclick="selectExperiment('${selected ? selected.id : ''}', true)" ${selected ? '' : 'disabled'}>Open experiment workspace</button>
+          <button class="btn" onclick="setActiveTab('scoreboard')">Open scoreboard</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-4">
+      <div class="metric-card"><div class="metric-kicker">Registry</div><div class="metric-value">${S.experiments.length}</div><div class="metric-note">Declarative steps ready to host future actions without rewiring the SPA.</div></div>
+      <div class="metric-card"><div class="metric-kicker">Artefacts</div><div class="metric-value">${mediaCount}</div><div class="metric-note">Images, HTML, videos, JSON and other outputs discovered in experiment roots.</div></div>
+      <div class="metric-card"><div class="metric-kicker">Scoreboard</div><div class="metric-value">${totalScores}</div><div class="metric-note">Persistent entries + auto-discovery from history JSON and active checkpoints.</div></div>
+      <div class="metric-card"><div class="metric-kicker">Live jobs</div><div class="metric-value">${runningCount}</div><div class="metric-note">All launches now go through a unified endpoint per experiment/action.</div></div>
+    </div>
+
+    <div class="overview-grid">
+      <div class="surface pad">
+        <div class="section-head">
+          <div>
+            <div class="section-kicker">Step Portfolio</div>
+            <div class="section-title">Available experiments</div>
+            <div class="section-copy">Compact view of sections currently connected to the platform.</div>
+          </div>
+        </div>
+        <div class="mini-exp-grid">
+          ${S.experiments.map(exp => `
+            <div class="mini-exp">
+              <div class="mini-exp-title">${escapeHtml(exp.title)}</div>
+              <div class="mini-exp-copy">${escapeHtml(exp.summary)}</div>
+              <div class="mini-exp-footer">
+                <span class="mini-pill">data ${exp.counts.dataset_files}</span>
+                <span class="mini-pill">ckpt ${exp.counts.checkpoint_files}</span>
+                <span class="mini-pill">scores ${groupedScores(exp.id).length}</span>
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>
+      <div class="surface pad">
+        <div class="section-head">
+          <div>
+            <div class="section-kicker">Score Spotlight</div>
+            <div class="section-title">Selection on ${selected ? escapeHtml(selected.kicker) : 'n/a'}</div>
+            <div class="section-copy">Cards below come from the persistent scoreboard or auto-discovery.</div>
+          </div>
+        </div>
+        ${spotlightScores.length ? `<div class="score-grid">${spotlightScores.map(renderScoreCard).join('')}</div>` : '<div class="muted-box">No persistent scores for this experiment yet. Use the Scoreboard panel to add measured milestones.</div>'}
+      </div>
+    </div>
+  `;
+}
+
+function renderPathCards(items, emptyCopy) {
+  if (!items.length) {
+    return `<div class="muted-box">${escapeHtml(emptyCopy)}</div>`;
+  }
+  return `<div class="path-grid">${items.map(item => `
+    <div class="path-card">
+      <div class="path-head">
+        <div class="path-title">${escapeHtml(item.label)}</div>
+        <div class="badge">${item.file_count} files</div>
+      </div>
+      <div class="path-body">${escapeHtml(item.relative_path)}</div>
+      ${item.preview?.length ? `<div class="path-preview">${item.preview.map(value => `<span>${escapeHtml(value)}</span>`).join('')}</div>` : `<div class="path-preview"><span>${item.exists ? 'No preview files yet.' : 'Path missing for now.'}</span></div>`}
+    </div>`).join('')}</div>`;
+}
+
+function renderActionField(experiment, action, param) {
+  const fieldId = `field-${experiment.id}-${action.id}-${param.name}`;
+  const full = ['checkpoint', 'case', 'urdf', 'dataset', 'save_dir', 'notes', 'source'].includes(param.name) ? ' full' : '';
+  if (param.type === 'boolean') {
+    return `
+      <div class="field full">
+        <label>${escapeHtml(param.label)}</label>
+        <div class="toggle">
+          <input id="${fieldId}" data-experiment="${experiment.id}" data-action="${action.id}" data-name="${param.name}" type="checkbox" ${param.default ? 'checked' : ''}>
+          <span>${escapeHtml(param.label)}</span>
+        </div>
+      </div>`;
+  }
+
+  const specialOptions = resolveDynamicOptions(experiment, param);
+  const options = specialOptions.length ? specialOptions : (param.options || []).map(value => ({ label: value, value }));
+  if (param.type === 'select' || options.length) {
+    return `
+      <div class="field${full}">
+        <label for="${fieldId}">${escapeHtml(param.label)}</label>
+        <select id="${fieldId}" data-experiment="${experiment.id}" data-action="${action.id}" data-name="${param.name}">
+          ${options.map(option => `<option value="${escapeHtml(option.value)}" ${String(option.value) === String(param.default || '') ? 'selected' : ''}>${escapeHtml(option.label)}</option>`).join('')}
+        </select>
+      </div>`;
+  }
+
+  const inputType = param.type === 'number' ? 'number' : 'text';
+  const step = param.step != null ? `step="${param.step}"` : '';
+  const min = param.min != null ? `min="${param.min}"` : '';
+  const max = param.max != null ? `max="${param.max}"` : '';
+  return `
+    <div class="field${full}">
+      <label for="${fieldId}">${escapeHtml(param.label)}</label>
+      <input id="${fieldId}" data-experiment="${experiment.id}" data-action="${action.id}" data-name="${param.name}" type="${inputType}" value="${escapeHtml(param.default ?? '')}" ${step} ${min} ${max}>
+    </div>`;
+}
+
+function resolveDynamicOptions(experiment, param) {
+  if (experiment.id === 'step1b_medical_msd' && param.name === 'checkpoint') {
+    return S.checkpoints
+      .filter(item => ['fluidvla', 'unet3d_std', 'unet3d_tiny'].includes(item.model_type))
+      .map(item => ({ label: `[${item.model_type}] ${item.task} / ${item.filename}`, value: item.path }));
+  }
+  if (experiment.id === 'step1b_medical_msd' && param.name === 'case') {
+    const taskField = document.getElementById(`field-${experiment.id}-infer-task`);
+    const task = taskField ? taskField.value : 'Task01_BrainTumour';
+    const dataset = S.datasets.find(item => item.task === task);
+    return (dataset?.cases || []).map(value => ({ label: value, value }));
+  }
+  if ((experiment.id === 'step2_sim' || experiment.id === 'step2d_so101_urdf' || experiment.id === 'step3_lerobot' || experiment.id === 'step2a_synthetic') && param.name === 'checkpoint') {
+    const roots = experiment.paths.checkpoints.map(item => item.relative_path);
+    return S.checkpoints
+      .filter(item => roots.some(root => item.path.replace(/\\/g, '/').includes(root)))
+      .map(item => ({ label: `${item.task} / ${item.filename}`, value: item.path }));
+  }
+  return [];
+}
+
+function renderActionCard(experiment, action) {
+  return `
+    <div class="action-card">
+      <div class="action-title">${escapeHtml(action.label)}</div>
+      <div class="action-kind">${escapeHtml(action.kind)}</div>
+      <div class="form-grid">
+        ${(action.params || []).map(param => renderActionField(experiment, action, param)).join('')}
+      </div>
+      <div class="action-footer">
+        <div class="hint">Launching goes through the unified /api/experiments/run backend. Adding a new step means extending the registry and its command builder.</div>
+        <button class="btn primary" onclick="runAction('${experiment.id}', '${action.id}')">Run</button>
+      </div>
+    </div>`;
+}
+
+function renderMetricPills(metricEntries) {
+  if (!metricEntries.length) return '';
+  const latest = metricEntries.slice(-6).reverse();
+  return `<div class="console-metrics">${latest.map(item => {
+    const parts = [];
+    if (item.metric) parts.push(`${item.metric}: ${fmtNumber(item.value ?? item.progress ?? 0, item.unit === 'ms' ? 2 : 4)}`);
+    if (item.steps != null) parts.push(`steps ${fmtNumber(item.steps, 2)}`);
+    if (item.latency_ms != null) parts.push(`lat ${fmtNumber(item.latency_ms, 2)} ms`);
+    if (item.label) parts.push(item.label);
+    return `<div class="console-metric">${escapeHtml(parts.join(' | ') || JSON.stringify(item))}</div>`;
+  }).join('')}</div>`;
+}
+
+function renderExperimentDetail() {
+  const panel = document.getElementById('panel-experiments');
+  const exp = getExperiment(S.selectedExperimentId) || S.experiments[0];
+  if (!exp) {
+    panel.innerHTML = '<div class="muted-box" style="margin:24px">The experiment registry is empty.</div>';
+    return;
+  }
+  const scores = groupedScores(exp.id);
+  const jobId = latestJobForExperiment(exp.id) || S.activeJobId;
+  const logs = jobId ? (S.jobLogs[jobId] || []) : [];
+  const metrics = jobId ? (S.jobMetrics[jobId] || []) : [];
+  const pathsBlock = `
+    <div class="surface pad">
+      <div class="section-kicker">Path Topology</div>
+      <div class="section-title">Datasets</div>
+      <div class="section-copy">The platform inspects these roots to populate cards, actions, and the gallery.</div>
+      ${renderPathCards(exp.paths.datasets, 'No dataset root defined for this step.')}
+      <div style="height:16px"></div>
+      <div class="section-title" style="font-size:20px">Checkpoints</div>
+      ${renderPathCards(exp.paths.checkpoints, 'No checkpoint root defined for this step.')}
+      <div style="height:16px"></div>
+      <div class="section-title" style="font-size:20px">Outputs</div>
+      ${renderPathCards(exp.paths.outputs, 'No output root defined for this step.')}
+    </div>`;
+
+  panel.innerHTML = `
+    <div class="detail-shell">
+      <div class="detail-column scroll-y">
+        <div class="surface pad">
+          <div class="section-kicker">${escapeHtml(exp.kicker)}</div>
+          <div class="detail-title">${escapeHtml(exp.title)}</div>
+          <div class="detail-copy">${escapeHtml(exp.description)}</div>
+          <div class="chip-row">
+            <div class="chip">${exp.counts.dataset_files} data files</div>
+            <div class="chip">${exp.counts.checkpoint_files} checkpoints</div>
+            <div class="chip">${exp.counts.output_files} outputs</div>
+            <div class="chip">${scores.length} scoreboard entries</div>
+          </div>
+        </div>
+
+        <div class="surface pad">
+          <div class="section-kicker">Actions</div>
+          <div class="section-title">Step controls</div>
+          <div class="section-copy">Each card below corresponds to an action declared in the backend registry.</div>
+          <div class="actions-grid">
+            ${(exp.actions || []).map(action => renderActionCard(exp, action)).join('') || '<div class="muted-box">No actions declared for this step.</div>'}
+          </div>
+        </div>
+
+        ${pathsBlock}
+      </div>
+
+      <div class="detail-column scroll-y">
+        <div class="surface pad">
+          <div class="section-head">
+            <div>
+              <div class="section-kicker">Live Console</div>
+              <div class="section-title">Jobs and telemetry</div>
+              <div class="section-copy">${jobId ? `Last job: ${jobId}` : 'No recent job attached to this experiment.'}</div>
+            </div>
+            <button class="btn subtle" onclick="clearActiveLogs('${jobId || ''}')" ${jobId ? '' : 'disabled'}>Clear</button>
+          </div>
+          <div class="console">
+            <div class="console-head">
+              <div>
+                <div class="console-title">${jobId ? escapeHtml(jobId) : 'No active job'}</div>
+                <div class="console-sub">${jobId ? escapeHtml((S.jobs[jobId] || {}).status || 'queued') : 'Upcoming runs will appear here live.'}</div>
+              </div>
+            </div>
+            ${renderMetricPills(metrics)}
+            <div class="console-log">${logs.length ? escapeHtml(logs.join('\n')) : '<span class="console-empty">No logs yet for this experience.</span>'}</div>
+          </div>
+        </div>
+
+        <div class="surface pad">
+          <div class="section-head">
+            <div>
+              <div class="section-kicker">Persistent Scoreboard</div>
+              <div class="section-title">Step benchmarks</div>
+              <div class="section-copy">The following cards are persistent or auto-generated from available histories and summaries.</div>
+            </div>
+            <button class="btn" onclick="prefillScoreboard('${exp.id}')">Add score</button>
+          </div>
+          ${scores.length ? `<div class="score-grid">${scores.map(renderScoreCard).join('')}</div>` : '<div class="muted-box">No scores for this step yet. Add a persistent milestone or run an experiment that writes a history JSON.</div>'}
+        </div>
+
+        <div class="surface pad">
+          <div class="section-head">
+            <div>
+              <div class="section-kicker">Media Surface</div>
+              <div class="section-title">Visualizations and results</div>
+              <div class="section-copy">Gallery for this experiment: inference outputs, debug images, 3D renders, JSON results.</div>
+            </div>
+          </div>
+          ${exp.media?.length ? renderMediaByCategory(exp.media) : '<div class="muted-box">No media detected for this step. The surface is ready for future outputs; a run just needs to write files in the declared roots.</div>'}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Media categorization and filtering
+const MEDIA_CATEGORIES = {
+  images: { label: 'Images', types: ['png', 'jpg', 'jpeg', 'gif'] },
+  interactive: { label: '3D / Interactive', types: ['html'] },
+  video: { label: 'Video', types: ['mp4', 'webm'] },
+  data: { label: 'Data / JSON', types: ['json', 'csv', 'npy', 'npz'] },
+};
+
+function categorizeMedia(items) {
+  const groups = {};
+  for (const [key, cat] of Object.entries(MEDIA_CATEGORIES)) {
+    const matched = items.filter(m => cat.types.includes(m.type));
+    if (matched.length) groups[key] = { label: cat.label, items: matched };
+  }
+  const knownTypes = Object.values(MEDIA_CATEGORIES).flatMap(c => c.types);
+  const other = items.filter(m => !knownTypes.includes(m.type));
+  if (other.length) groups.other = { label: 'Other', items: other };
+  return groups;
+}
+
+function renderMediaByCategory(items) {
+  const groups = categorizeMedia(items);
+  const keys = Object.keys(groups);
+  if (!keys.length) return '<div class="muted-box">No media.</div>';
+  return keys.map(key => {
+    const group = groups[key];
+    return `<div style="margin-top:14px">
+      <div style="font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">${group.label} (${group.items.length})</div>
+      <div class="media-grid">${group.items.map(renderMediaCard).join('')}</div>
+    </div>`;
+  }).join('');
+}
+
+if (!S._outputFilter) S._outputFilter = null;
+
+function outputFilterButtons(allMedia) {
+  const counts = {};
+  for (const [key, cat] of Object.entries(MEDIA_CATEGORIES)) {
+    const c = allMedia.filter(m => cat.types.includes(m.type)).length;
+    if (c) counts[key] = c;
+  }
+  return Object.entries(counts).map(([key, c]) =>
+    `<button class="btn subtle ${S._outputFilter === key ? 'primary' : ''}" onclick="setOutputFilter('${key}')">${MEDIA_CATEGORIES[key].label} (${c})</button>`
+  ).join('');
+}
+
+function filterMedia(items) {
+  if (!S._outputFilter) return items;
+  const types = MEDIA_CATEGORIES[S._outputFilter]?.types || [];
+  return items.filter(m => types.includes(m.type));
+}
+
+function setOutputFilter(key) {
+  S._outputFilter = key;
+  renderOutputs();
+}
+
+function renderMediaCard(item) {
+  let preview = `<div class="media-placeholder">No preview available for ${escapeHtml(item.type)}.</div>`;
+  if (['png', 'jpg', 'jpeg', 'gif'].includes(item.type)) {
+    preview = `<img src="${fileUrl(item.path)}" alt="${escapeHtml(item.name)}">`;
+  } else if (['mp4', 'webm'].includes(item.type)) {
+    preview = `<video src="${fileUrl(item.path)}" controls preload="metadata"></video>`;
+  } else if (item.type === 'html') {
+    preview = `<iframe src="${fileUrl(item.path)}" title="${escapeHtml(item.name)}"></iframe>`;
+  }
+  return `
+    <div class="media-card">
+      <div class="media-preview">${preview}</div>
+      <div class="media-body">
+        <div class="media-title">${escapeHtml(item.name)}</div>
+        <div class="media-meta">${escapeHtml(item.relative_path)}<br>${fmtNumber(item.size_kb, 1)} KB</div>
+        <div class="media-actions">
+          <a href="${fileUrl(item.path)}" target="_blank" rel="noopener noreferrer">Open</a>
+          <a href="${downloadUrl(item.path)}">Download</a>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderScoreCard(entry) {
+  const experiment = getExperiment(entry.experiment_id);
+  const badgeType = entry.auto ? '<span class="badge">auto</span>' : '<span class="badge">manual</span>';
+  const metricBadge = `<span class="badge">${escapeHtml(entry.metric_name || 'metric')} / ${escapeHtml(entry.direction || 'max')}</span>`;
+  const deleteButton = entry.auto ? '' : `<button class="btn danger subtle" onclick="deleteScore('${entry.id}')">Delete</button>`;
+  return `
+    <div class="score-card">
+      <div class="score-head">
+        <div>
+          <div class="score-title">${escapeHtml(entry.title)}</div>
+          <div class="score-badges">${badgeType}${metricBadge}${experiment ? `<span class="badge">${escapeHtml(experiment.kicker)}</span>` : ''}</div>
+        </div>
+      </div>
+      <div class="score-value">${fmtScore(entry)}</div>
+      ${entry.notes ? `<div class="score-notes">${escapeHtml(entry.notes)}</div>` : ''}
+      ${entry.source ? `<div class="score-source">${escapeHtml(entry.source)}</div>` : ''}
+      ${deleteButton ? `<div class="score-actions">${deleteButton}</div>` : ''}
+    </div>`;
+}
+
+function renderScoreboard() {
+  const panel = document.getElementById('panel-scoreboard');
+  const selected = getExperiment(S.selectedExperimentId) || S.experiments[0];
+  const groups = S.experiments.map(exp => ({ exp, scores: groupedScores(exp.id) }));
+  panel.innerHTML = `
+    <div class="surface pad">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Persistent Registry</div>
+          <div class="section-title">Scoreboard per step</div>
+          <div class="section-copy">The scoreboard combines persistent manual entries and auto-discovery from repo histories.</div>
+        </div>
+      </div>
+      <div class="score-form">
+        <div class="field">
+          <label for="score-exp">Experience</label>
+          <select id="score-exp">${S.experiments.map(exp => `<option value="${exp.id}" ${selected && selected.id === exp.id ? 'selected' : ''}>${escapeHtml(exp.title)}</option>`).join('')}</select>
+        </div>
+        <div class="field">
+          <label for="score-title">Title</label>
+          <input id="score-title" type="text" placeholder="Ex: Best val Dice BrainTumour">
+        </div>
+        <div class="field">
+          <label for="score-metric">Metric name</label>
+          <input id="score-metric" type="text" placeholder="best_val_dice">
+        </div>
+        <div class="field">
+          <label for="score-value">Value</label>
+          <input id="score-value" type="number" step="0.0001" placeholder="0.9177">
+        </div>
+        <div class="field">
+          <label for="score-unit">Unit</label>
+          <input id="score-unit" type="text" placeholder="dice / ms / accuracy">
+        </div>
+        <div class="field">
+          <label for="score-direction">Direction</label>
+          <select id="score-direction">
+            <option value="max">max</option>
+            <option value="min">min</option>
+          </select>
+        </div>
+        <div class="field full">
+          <label for="score-source">Source</label>
+          <input id="score-source" type="text" placeholder="README.md or history.json path">
+        </div>
+        <div class="field full">
+          <label for="score-notes">Notes</label>
+          <textarea id="score-notes" placeholder="Context, protocol, caveats, hardware, etc."></textarea>
+        </div>
+      </div>
+      <div class="chip-row">
+        <button class="btn primary" onclick="saveScoreboardEntry()">Save persistent entry</button>
+        <button class="btn" onclick="prefillScoreboard('${selected ? selected.id : ''}')">Prefill from selected step</button>
+      </div>
+    </div>
+
+    ${groups.map(group => `
+      <div class="surface pad">
+        <div class="section-head">
+          <div>
+            <div class="section-kicker">${escapeHtml(group.exp.kicker)}</div>
+            <div class="section-title">${escapeHtml(group.exp.title)}</div>
+            <div class="section-copy">${escapeHtml(group.exp.summary)}</div>
+          </div>
+          <div class="badge">${group.scores.length} entries</div>
+        </div>
+        ${group.scores.length ? `<div class="score-grid">${group.scores.map(renderScoreCard).join('')}</div>` : '<div class="muted-box">No persistent or auto-discovered scores for this step yet.</div>'}
+      </div>`).join('')}
+  `;
+}
+
+function renderOutputs() {
+  const panel = document.getElementById('panel-outputs');
+  const allMedia = S.experiments.flatMap(exp => (exp.media || []).map(m => ({...m, _exp: exp})));
+  if (!allMedia.length) {
+    panel.innerHTML = '<div class="surface pad"><div class="muted-box">No media detected across experiments.</div></div>';
+    return;
+  }
+  panel.innerHTML = `
+    <div class="surface pad">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">All Experiments</div>
+          <div class="section-title">Aggregated artifacts</div>
+          <div class="section-copy">Global view of media and outputs across all experiments (${allMedia.length} files).</div>
+        </div>
+      </div>
+      <div class="outputs-filter" style="display:flex;gap:8px;margin:14px 0;flex-wrap:wrap">
+        <button class="btn subtle ${!S._outputFilter ? 'primary' : ''}" onclick="setOutputFilter(null)">All (${allMedia.length})</button>
+        ${outputFilterButtons(allMedia)}
+      </div>
+      ${S.experiments.filter(exp => exp.media?.length).map(exp => {
+        const filtered = filterMedia(exp.media);
+        if (!filtered.length) return '';
+        return `<div style="margin-top:18px">
+          <div class="section-kicker">${escapeHtml(exp.kicker)}</div>
+          <div class="section-title" style="font-size:20px;margin-top:6px">${escapeHtml(exp.title)}</div>
+          ${renderMediaByCategory(filtered)}
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+function renderDatasetExplorer() {
+  const panel = document.getElementById('panel-dataset-explorer');
+  const overview = S.datasetExplorer || {};
+  const view = S.datasetExplorerView;
+  const dirOptions = explorerDirOptions(view.kind);
+  const visibleFiles = filteredExplorerFiles();
+  const selectedDirectory = view.directory || (dirOptions[0]?.path || '');
+  panel.innerHTML = `
+    <div class="explorer-shell">
+      <div class="surface pad">
+        <div class="section-kicker">Dataset Workbench</div>
+        <div class="section-title">Native Dataset Explorer</div>
+        <div class="section-copy">This view replaces the old external viewer with a responsive HTML/CSS/JS inspector connected directly to the Python server. Browse dataset and checkpoint roots, then inspect episodes, NIfTI volumes, JSON histories and checkpoints without leaving the SPA.</div>
+        <div class="explorer-meta-grid">
+          <div class="status-card">
+            <div class="status-label">Dataset roots</div>
+            <div class="status-value">${escapeHtml(String((overview.dataset_dirs || []).length))}</div>
+          </div>
+          <div class="status-card">
+            <div class="status-label">Checkpoint roots</div>
+            <div class="status-value">${escapeHtml(String((overview.checkpoint_dirs || []).length))}</div>
+          </div>
+          <div class="status-card">
+            <div class="status-label">Current files</div>
+            <div class="status-value">${escapeHtml(String(visibleFiles.length))}${view.query ? ` / ${escapeHtml(String((view.files || []).length))}` : ''}</div>
+          </div>
+        </div>
+        <div class="chip-row">
+          <button class="btn primary" onclick="refreshDatasetExplorer(true)">Refresh inventory</button>
+          <button class="btn" onclick="setExplorerKind('dataset')">Open datasets</button>
+          <button class="btn" onclick="setExplorerKind('checkpoint')">Open checkpoints</button>
+        </div>
+      </div>
+      <div class="explorer-layout">
+        <div class="explorer-side">
+          <div class="surface pad scroll-y explorer-stack">
+            <div class="explorer-toggle">
+              <button class="${view.kind === 'dataset' ? 'active' : ''}" onclick="setExplorerKind('dataset')">Datasets</button>
+              <button class="${view.kind === 'checkpoint' ? 'active' : ''}" onclick="setExplorerKind('checkpoint')">Models & Logs</button>
+            </div>
+            <div>
+              <div class="section-kicker">Root directory</div>
+              <div class="section-copy">Choose the root to explore. Compatible files are listed below.</div>
+            </div>
+            <select class="explorer-select" onchange="loadExplorerDirectory('${view.kind}', this.value)" ${dirOptions.length ? '' : 'disabled'}>
+              ${dirOptions.map(option => `<option value="${escapeHtml(option.path)}" ${option.path === selectedDirectory ? 'selected' : ''}>${escapeHtml(option.relative_path)}</option>`).join('')}
+            </select>
+            ${view.directoryMeta ? `<div class="explorer-stat-list">${renderExplorerStats({ files: view.directoryMeta.file_count, path: view.directoryMeta.relative_path })}</div>` : ''}
+            <div>
+              <div class="section-kicker">Files</div>
+              <div class="section-copy">${view.kind === 'dataset' ? 'NPZ, NPY, NIfTI, MNIST idx et batches CIFAR.' : 'Checkpoints PyTorch et logs JSON.'}</div>
+            </div>
+            <input class="explorer-search" type="text" value="${escapeHtml(view.query || '')}" oninput="setExplorerSearch(this.value)" placeholder="Quick search: Task07, pancreas, labelsTr, json...">
+            <div class="explorer-file-list">
+              ${visibleFiles.length ? visibleFiles.map(file => `
+                <div class="explorer-file ${view.selectedPath === file.path ? 'active' : ''}" onclick='inspectExplorerFile(${jsStringLiteral(file.path)})'>
+                  <div class="explorer-file-name">${escapeHtml(file.display_name)}</div>
+                  <div class="explorer-file-meta">
+                    <span>${escapeHtml(file.file_type)}</span>
+                    <span>${escapeHtml(String(file.size_kb))} KB</span>
+                    <span>${escapeHtml(file.category)}</span>
+                  </div>
+                  <div class="explorer-file-path">${escapeHtml(file.relative_path)}</div>
+                </div>`).join('') : `<div class="explorer-empty">${view.query ? 'No files match this search.' : 'No compatible files detected in this root.'}</div>`}
+            </div>
+          </div>
+        </div>
+        <div class="explorer-main scroll-y">${renderExplorerInspection()}</div>
+      </div>
+    </div>`;
+}
+
+function renderJobBar() {
+  const host = document.getElementById('job-pills');
+  const entries = Object.entries(S.jobs).slice(-10).reverse();
+  host.innerHTML = entries.map(([jobId, job]) => {
+    const meta = S.jobMeta[jobId] || {};
+    const parts = [meta.experiment_id, meta.action_id].filter(Boolean);
+    if (meta.task) parts.push(meta.task);
+    else if (meta.dataset) parts.push(meta.dataset);
+    const label = parts.join(' / ') || jobId;
+    return `<div class="job-pill ${escapeHtml(job.status || 'queued')}"><span class="job-dot"></span>${escapeHtml(label)}<span class="badge">${escapeHtml(job.status || 'queued')}</span></div>`;
+  }).join('');
+}
+
+// Persistent form state -- survives across renders
+if (!S._formState) S._formState = {};
+
+function captureFormState() {
+  document.querySelectorAll('[data-experiment][data-action][data-name]').forEach(el => {
+    const key = `${el.dataset.experiment}__${el.dataset.action}__${el.dataset.name}`;
+    if (el.type === 'checkbox') S._formState[key] = el.checked;
+    else S._formState[key] = el.value;
+  });
+}
+
+function restoreFormState() {
+  document.querySelectorAll('[data-experiment][data-action][data-name]').forEach(el => {
+    const key = `${el.dataset.experiment}__${el.dataset.action}__${el.dataset.name}`;
+    if (key in S._formState) {
+      if (el.type === 'checkbox') el.checked = S._formState[key];
+      else el.value = S._formState[key];
+    }
+  });
+}
+
+// Also capture on every user input so we never lose changes
+document.addEventListener('input', (e) => {
+  const el = e.target;
+  if (el.dataset && el.dataset.experiment && el.dataset.action && el.dataset.name) {
+    const key = `${el.dataset.experiment}__${el.dataset.action}__${el.dataset.name}`;
+    if (el.type === 'checkbox') S._formState[key] = el.checked;
+    else S._formState[key] = el.value;
+  }
+});
+document.addEventListener('change', (e) => {
+  const el = e.target;
+  if (el.dataset && el.dataset.experiment && el.dataset.action && el.dataset.name) {
+    const key = `${el.dataset.experiment}__${el.dataset.action}__${el.dataset.name}`;
+    if (el.type === 'checkbox') S._formState[key] = el.checked;
+    else S._formState[key] = el.value;
+  }
+});
+
+function renderAll() {
+  const scrollState = captureScrollState();
+  captureFormState();
+  renderExperimentList();
+  renderOverview();
+  renderExperimentDetail();
+  renderScoreboard();
+  renderOutputs();
+  renderDatasetExplorer();
+  renderJobBar();
+  restoreScrollState(scrollState);
+  restoreFormState();
+}
+
+async function refreshDatasetExplorer(reloadDirectory = false) {
+  try {
+    const response = await fetch('/api/dataset-explorer');
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || 'Unable to refresh dataset explorer status');
+    S.datasetExplorer = payload;
+    if (reloadDirectory) {
+      initDatasetExplorer(true);
+    } else {
+      renderAll();
+    }
+  } catch (error) {
+    alert(error.message || String(error));
+  }
+}
+
+function collectActionParams(experimentId, actionId) {
+  const nodes = document.querySelectorAll(`[data-experiment="${experimentId}"][data-action="${actionId}"]`);
+  const params = {};
+  nodes.forEach(node => {
+    const name = node.dataset.name;
+    if (node.type === 'checkbox') {
+      params[name] = node.checked;
+    } else if (node.type === 'number') {
+      params[name] = node.value === '' ? null : Number(node.value);
+    } else {
+      params[name] = node.value;
+    }
+  });
+  return params;
+}
+
+async function runAction(experimentId, actionId) {
+  const params = collectActionParams(experimentId, actionId);
+  try {
+    const response = await fetch('/api/experiments/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ experiment_id: experimentId, action_id: actionId, params }),
+    });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || 'Run failed');
+    if (payload.job_id) {
+      S.activeJobId = payload.job_id;
+      S.jobs[payload.job_id] = { status: 'queued' };
+      S.jobMeta[payload.job_id] = { experiment_id: experimentId, action_id: actionId };
+      renderAll();
+    }
+  } catch (error) {
+    alert(error.message || String(error));
+  }
+}
+
+function prefillScoreboard(experimentId) {
+  document.getElementById('score-exp').value = experimentId || (S.selectedExperimentId || '');
+  const exp = getExperiment(experimentId || S.selectedExperimentId) || S.experiments[0];
+  if (!exp) return;
+  document.getElementById('score-title').value = `${exp.title} | `;
+  const hint = exp.id === 'step1b_medical_msd' ? 'best_val_dice' : (exp.id.includes('step1') ? 'best_test_mse' : 'metric');
+  document.getElementById('score-metric').value = hint;
+  document.getElementById('score-unit').value = AUTO_UNIT_HINT(exp.id);
+  document.getElementById('score-source').value = exp.docs || '';
+  document.getElementById('score-notes').value = exp.summary || '';
+  setActiveTab('scoreboard');
+}
+
+function AUTO_UNIT_HINT(experimentId) {
+  if (experimentId === 'step1b_medical_msd') return 'dice';
+  if (experimentId === 'step0_mnist') return 'accuracy';
+  if (experimentId === 'step1_video' || experimentId === 'step2_sim' || experimentId === 'step2a_synthetic') return 'mse';
+  if (experimentId === 'step3_lerobot') return 'episodes';
+  return '';
+}
+
+async function saveScoreboardEntry() {
+  const body = {
+    experiment_id: document.getElementById('score-exp').value,
+    title: document.getElementById('score-title').value,
+    metric_name: document.getElementById('score-metric').value,
+    value: Number(document.getElementById('score-value').value),
+    unit: document.getElementById('score-unit').value,
+    direction: document.getElementById('score-direction').value,
+    source: document.getElementById('score-source').value,
+    notes: document.getElementById('score-notes').value,
+  };
+  try {
+    const response = await fetch('/api/scoreboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || 'Unable to save scoreboard entry');
+    S.scoreboard = payload.scoreboard;
+    renderAll();
+  } catch (error) {
+    alert(error.message || String(error));
+  }
+}
+
+async function deleteScore(entryId) {
+  try {
+    const response = await fetch('/api/scoreboard/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: entryId }),
+    });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || 'Unable to delete scoreboard entry');
+    S.scoreboard = payload.scoreboard;
+    renderAll();
+  } catch (error) {
+    alert(error.message || String(error));
+  }
+}
+
+function clearActiveLogs(jobId) {
+  if (!jobId) return;
+  S.jobLogs[jobId] = [];
+  S.jobMetrics[jobId] = [];
+  renderAll();
+}
+
+document.querySelectorAll('.tab').forEach(button => {
+  button.addEventListener('click', () => setActiveTab(button.dataset.tab));
+});
+document.getElementById('refresh-btn').addEventListener('click', refreshState);
+
+connectWS();
+refreshState();
+setInterval(refreshState, 30000);
+</script>
+</body>
+</html>

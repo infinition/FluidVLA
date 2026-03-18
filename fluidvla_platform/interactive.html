@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FluidVLA vs Transformers : La Révolution Edge AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;800&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #080c16; 
+            color: #f8fafc;
+        }
+        .font-mono { font-family: 'Fira Code', monospace; }
+        
+        .gradient-text {
+            background: linear-gradient(to right, #38bdf8, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .gradient-text-danger {
+            background: linear-gradient(to right, #f87171, #fb923c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 1.25rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        .card-hover-effect {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover-effect:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px -10px rgba(129, 140, 248, 0.2);
+            border-color: rgba(129, 140, 248, 0.4);
+        }
+        canvas {
+            display: block;
+            margin: 0 auto;
+            border-radius: 0.75rem;
+            background: #0f172a;
+            box-shadow: inset 0 2px 10px 0 rgba(0, 0, 0, 0.5);
+        }
+        .bounce { animation: bounce 2s infinite; }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-15px); }
+            60% { transform: translateY(-7px); }
+        }
+        .tab-content { display: none; animation: fadeIn 0.4s ease-out forwards; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .glow-effect { position: absolute; filter: blur(80px); opacity: 0.15; z-index: -1; pointer-events: none; }
+
+        /* Timeline & Accordion */
+        .timeline-line {
+            position: absolute;
+            left: 1.5rem;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, #4f46e5, #9333ea, transparent);
+            z-index: 0;
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
+            opacity: 0;
+        }
+        .accordion-content.expanded {
+            max-height: 2500px; /* Large enough for content */
+            opacity: 1;
+        }
+        .accordion-icon {
+            transition: transform 0.3s ease;
+        }
+        .expanded .accordion-icon {
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+<body class="antialiased overflow-x-hidden selection:bg-indigo-500 selection:text-white">
+
+    <!-- HERO SECTION -->
+    <section class="min-h-screen flex flex-col items-center justify-center relative px-6 text-center pt-10">
+        <div class="absolute inset-0 overflow-hidden pointer-events-none z-0">
+            <div class="glow-effect w-[600px] h-[600px] bg-indigo-600 rounded-full top-1/4 left-1/4 animate-pulse"></div>
+            <div class="glow-effect w-[500px] h-[500px] bg-purple-600 rounded-full bottom-1/4 right-1/4" style="animation: pulse 5s infinite reverse;"></div>
+        </div>
+        
+        <div class="z-10 max-w-5xl mx-auto">
+            <div class="inline-flex items-center gap-2 px-4 py-2 mb-8 border border-indigo-500/30 rounded-full bg-indigo-500/10 text-indigo-300 text-sm font-semibold tracking-wide uppercase">
+                🚀 Projet de Recherche Indépendant
+            </div>
+            
+            <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-8 leading-tight">
+                L'IA n'est plus un Câblage.<br>
+                <span class="gradient-text">C'est un Fluide.</span>
+            </h1>
+            
+            <p class="text-xl md:text-2xl text-slate-300 mb-12 leading-relaxed max-w-3xl mx-auto font-light">
+                Les Transformers exigent des supercalculateurs géants à cause du mur de l'Attention Globale. 
+                <strong class="text-white font-semibold">FluidVLA</strong> remplace ce mécanisme par des équations de Réaction-Diffusion, permettant à l'IA d'analyser le monde en 3D à plus de 240 FPS sur de simples puces Edge.
+            </p>
+            
+            <div class="flex flex-wrap justify-center gap-4">
+                <a href="#concept-section" class="px-8 py-4 text-base font-bold text-white transition-all duration-200 bg-indigo-600 border border-transparent rounded-full hover:bg-indigo-500 hover:shadow-lg hover:shadow-indigo-500/40">
+                    Comprendre la Physique
+                </a>
+                <a href="#results-section" class="px-8 py-4 text-base font-bold text-slate-300 transition-all duration-200 bg-slate-800 border border-slate-700 rounded-full hover:bg-slate-700 hover:text-white">
+                    Voir les résultats expérimentaux
+                </a>
+                <a href="#roadmap-section" class="px-8 py-4 text-base font-bold text-slate-400 transition-all duration-200 bg-transparent border border-slate-700 rounded-full hover:border-indigo-500 hover:text-indigo-400">
+                    Explorer la Roadmap
+                </a>
+            </div>
+        </div>
+        
+        <div class="absolute bottom-8 bounce text-slate-500">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+        </div>
+    </section>
+
+    <!-- CONCEPT SECTION (O(N^2) vs O(N)) -->
+    <section id="concept-section" class="py-24 px-6 relative border-t border-slate-800/50 bg-slate-900/30">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold mb-4">La Déconstruction de l'Attention</h2>
+                <p class="text-slate-400 text-lg">Pourquoi les Transformers saturent la mémoire, et comment l'analogie de l'encre résout le problème.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                
+                <!-- O(N^2) Card -->
+                <div class="glass-panel p-8">
+                    <div class="mb-6">
+                        <span class="text-xs font-bold uppercase tracking-widest text-red-400 bg-red-400/10 px-3 py-1 rounded-md border border-red-500/20">L'Ancien Monde</span>
+                        <h3 class="text-2xl font-bold mt-4 mb-2">Attention Globale O(N²)</h3>
+                        <p class="text-slate-400 text-sm">Chaque pixel doit calculer sa relation avec <em>tous les autres pixels</em> simultanément. C'est ce qui fait exploser le KV-Cache sur les séquences longues (vidéo, ADN).</p>
+                    </div>
+                    
+                    <div class="flex justify-center mb-6 relative">
+                        <canvas id="transformerCanvas" width="300" height="300" class="border border-slate-700"></canvas>
+                        <div id="memoryWarning" class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-red-500/90 text-white text-xs font-bold px-3 py-1 rounded-full opacity-0 transition-opacity whitespace-nowrap">SATURATION MÉMOIRE</div>
+                    </div>
+                    
+                    <label class="block text-xs font-medium text-slate-500 mb-2 uppercase tracking-wide">Taille de la séquence (Résolution / Frames)</label>
+                    <input type="range" id="nodeSlider" min="3" max="50" value="4" class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer mb-4 accent-red-500">
+                    
+                    <div class="flex justify-between items-end border-t border-slate-800 pt-4">
+                        <div><div class="text-slate-500 text-xs uppercase">Entrées</div><div class="text-2xl font-bold text-white" id="nodeCount">4</div></div>
+                        <div class="text-right"><div class="text-slate-500 text-xs uppercase">Calculs requis</div><div class="text-2xl font-bold text-red-400 transition-colors" id="connectionCount">6</div></div>
+                    </div>
+                </div>
+
+                <!-- O(N) Card -->
+                <div class="glass-panel p-8 border-t-4 border-t-indigo-500">
+                    <div class="mb-6">
+                        <span class="text-xs font-bold uppercase tracking-widest text-indigo-400 bg-indigo-400/10 px-3 py-1 rounded-md border border-indigo-500/20">La Révolution FluidVLA</span>
+                        <h3 class="text-2xl font-bold mt-4 mb-2">Réaction-Diffusion O(N)</h3>
+                        <p class="text-slate-400 text-sm">L'information se propage de proche en proche (Laplacien), comme une goutte d'encre qui se diffuse lentement dans l'eau. Le coût mémoire reste strictement linéaire.</p>
+                    </div>
+                    
+                    <div class="flex justify-center mb-6 relative group">
+                        <canvas id="fluidCanvas" width="300" height="300" class="border border-slate-700 cursor-pointer"></canvas>
+                        <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span class="bg-indigo-600/80 text-white text-xs font-bold px-3 py-1 rounded-full backdrop-blur-sm tracking-widest">DÉPOSEZ L'ENCRE</span>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-3 pt-2">
+                        <div class="flex items-start text-sm"><svg class="w-5 h-5 text-indigo-500 mr-3 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><span class="text-slate-300"><strong>Calcul Local :</strong> Les interactions sont limitées aux voisins immédiats. La structure globale émerge naturellement.</span></div>
+                        <div class="flex items-start text-sm"><svg class="w-5 h-5 text-indigo-500 mr-3 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><span class="text-slate-300"><strong>Zéro KV-Cache :</strong> Aucun historique d'attention n'est conservé, permettant une inférence illimitée.</span></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- RESULTS DASHBOARD -->
+    <section id="results-section" class="py-24 px-6 relative border-t border-slate-800/50">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-4">Résultats Expérimentaux (Phase 1)</h2>
+                <p class="text-slate-400">Architecture validée localement sur une simple RTX 4070 Ti de bureau.</p>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="flex flex-wrap justify-center gap-2 mb-10 bg-slate-800/40 p-2 rounded-2xl w-fit mx-auto border border-slate-700/50 backdrop-blur-md shadow-xl">
+                <button onclick="openTab('tab-medical')" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 bg-indigo-600 text-white shadow-lg shadow-indigo-500/30" id="btn-medical">🏥 Médical 3D</button>
+                <button onclick="openTab('tab-robot')" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 text-slate-400 hover:text-white hover:bg-slate-700/50" id="btn-robot">🤖 Robotique VLA</button>
+                <button onclick="openTab('tab-video')" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 text-slate-400 hover:text-white hover:bg-slate-700/50" id="btn-video">🎥 Vidéo Scaling</button>
+                <button onclick="openTab('tab-compute')" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 text-slate-400 hover:text-white hover:bg-slate-700/50" id="btn-compute">⚡ Adaptive Compute</button>
+                <button onclick="openTab('tab-image')" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 text-slate-400 hover:text-white hover:bg-slate-700/50" id="btn-image">🖼️ Image (Step 0)</button>
+            </div>
+
+            <!-- Tab 1: Medical 3D (BraTS) -->
+            <div id="tab-medical" class="tab-content active">
+                <div class="glass-panel p-8">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b border-slate-700 pb-6">
+                        <div>
+                            <h3 class="text-2xl font-bold text-white mb-2">Segmentation Tumeur Cérébrale 3D | MSD Task01 BrainTumour</h3>
+                            <p class="text-slate-400">IRM 4 modalités, protocole 16 train / 4 val / 5 epochs, crop 128³. Le point important n'est pas seulement le Dice final : c'est le fait que le coeur PDE 3D a pu être debuggué, calibré puis rendu compétitif sur de vrais volumes NIfTI multimodaux.</p>
+                        </div>
+                        <div class="mt-4 md:mt-0 flex flex-col gap-2 items-start md:items-end">
+                            <div class="bg-green-500/10 border border-green-500/30 px-4 py-2 rounded-lg text-green-400 font-mono text-sm font-bold shadow-[0_0_10px_rgba(74,222,128,0.1)]">
+                                Medical Step 0 Validé ✅
+                            </div>
+                            <a href="/medical-step0-results" target="_blank" rel="noopener noreferrer" class="text-xs font-bold uppercase tracking-wider text-indigo-300 border border-indigo-500/30 bg-indigo-500/10 px-3 py-1.5 rounded-lg hover:bg-indigo-500/20 transition-colors">Voir le log exhaustif</a>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                        <div class="space-y-6">
+                            <div class="grid grid-cols-2 gap-3 text-sm">
+                                <div class="rounded-xl border border-slate-700 bg-slate-800/40 p-4">
+                                    <div class="text-xs uppercase tracking-widest text-slate-500 mb-1">Headline</div>
+                                    <div class="text-2xl font-black text-white">0.9177</div>
+                                    <div class="text-slate-400">Best Val Dice PDE ON</div>
+                                </div>
+                                <div class="rounded-xl border border-slate-700 bg-slate-800/40 p-4">
+                                    <div class="text-xs uppercase tracking-widest text-slate-500 mb-1">Taille modèle</div>
+                                    <div class="text-2xl font-black text-white">16,632</div>
+                                    <div class="text-slate-400">paramètres totaux</div>
+                                </div>
+                                <div class="rounded-xl border border-slate-700 bg-slate-800/40 p-4">
+                                    <div class="text-xs uppercase tracking-widest text-slate-500 mb-1">Cas vitrine</div>
+                                    <div class="text-2xl font-black text-white">44.16 ms</div>
+                                    <div class="text-slate-400">slice centrale BRATS_001</div>
+                                </div>
+                                <div class="rounded-xl border border-slate-700 bg-slate-800/40 p-4">
+                                    <div class="text-xs uppercase tracking-widest text-slate-500 mb-1">Gain PDE</div>
+                                    <div class="text-2xl font-black text-emerald-400">+0.0048</div>
+                                    <div class="text-slate-400">vs contrôle no-PDE</div>
+                                </div>
+                            </div>
+
+                            <div class="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 text-sm text-slate-300">
+                                <div class="text-xs uppercase tracking-widest text-amber-300 mb-2">Calibration Fix</div>
+                                <p>Le vrai tournant du Step 0 a été la correction d'un bug : <span class="font-mono text-white">diffusion_scale</span> n'était pas câblé correctement sur la diffusion positive. Avant fix, le PDE ON tombait à <span class="font-bold text-red-400">0.3846</span>. Après fix, il remonte à <span class="font-bold text-emerald-400">0.8756</span> puis <span class="font-bold text-emerald-400">0.8867</span> selon l'échelle testée.</p>
+                            </div>
+
+                            <!-- Comparison Table -->
+                            <div class="overflow-hidden rounded-xl border border-slate-700 bg-slate-800/30">
+                                <table class="w-full text-sm text-left">
+                                    <thead class="bg-slate-800/80 text-slate-300 text-xs uppercase">
+                                        <tr>
+                                            <th class="px-4 py-3 font-semibold">Métrique</th>
+                                            <th class="px-4 py-3 font-semibold text-slate-500">Contrôle / Baseline</th>
+                                            <th class="px-4 py-3 font-bold text-indigo-400">FluidVLA (PDE)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-700">
+                                        <tr>
+                                            <td class="px-4 py-3 text-slate-300">Précision (Dice)</td>
+                                            <td class="px-4 py-3 text-slate-500">0.9129 <span class="text-xs">(PDE OFF)</span></td>
+                                            <td class="px-4 py-3 font-bold text-green-400">0.9177 <span class="text-xs font-normal text-green-500/70">(+0.0048)</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-4 py-3 text-slate-300">Paramètres</td>
+                                            <td class="px-4 py-3 text-slate-500">contrôle iso-architecture</td>
+                                            <td class="px-4 py-3 font-bold text-indigo-400">0.017 Million</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-4 py-3 text-slate-300">Latence / Volume</td>
+                                            <td class="px-4 py-3 text-slate-500">~60 ms <span class="text-xs">(PDE OFF)</span></td>
+                                            <td class="px-4 py-3 font-bold text-indigo-400">~89 ms <span class="text-xs font-normal text-indigo-500/70">(protocole principal)</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-4 py-3 text-slate-300">VRAM Peak</td>
+                                            <td class="px-4 py-3 text-slate-500">~632 MiB</td>
+                                            <td class="px-4 py-3 font-bold text-indigo-400">632 MiB</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="overflow-hidden rounded-xl border border-slate-700 bg-slate-800/20">
+                                <table class="w-full text-sm text-left">
+                                    <thead class="bg-slate-800/80 text-slate-300 text-xs uppercase">
+                                        <tr>
+                                            <th class="px-4 py-3 font-semibold">Comparatif externe</th>
+                                            <th class="px-4 py-3 font-semibold text-slate-500">UNet3D_Tiny</th>
+                                            <th class="px-4 py-3 font-semibold text-slate-500">UNet3D_Std</th>
+                                            <th class="px-4 py-3 font-bold text-indigo-400">FluidVLA</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-700">
+                                        <tr>
+                                            <td class="px-4 py-3 text-slate-300">Dice</td>
+                                            <td class="px-4 py-3 text-slate-400">0.8494</td>
+                                            <td class="px-4 py-3 text-slate-400">0.8233</td>
+                                            <td class="px-4 py-3 font-bold text-green-400">0.9177</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-4 py-3 text-slate-300">Params</td>
+                                            <td class="px-4 py-3 text-slate-400">88,278</td>
+                                            <td class="px-4 py-3 text-slate-400">5,603,746</td>
+                                            <td class="px-4 py-3 font-bold text-indigo-400">16,632</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <p class="text-sm text-slate-400 italic border-l-2 border-indigo-500 pl-3">"Le vrai message du Step 0 n'est pas une revendication clinique prématurée. Le vrai message, c'est qu'un coeur réaction-diffusion 3D a été porté sur de vraies IRM multimodales, calibré, puis rendu compétitif dans un protocole concret."</p>
+                            <p class="text-xs text-slate-500">Prudence méthodologique : les latences FluidVLA du comparatif externe sont reportées sur GPU, alors que les latences U-Net affichées dans le log sont reportées sur CPU. Le Dice est informatif ; la latence n'est pas un benchmark matériel parfaitement homogène.</p>
+                        </div>
+                        
+                        <!-- Abstract Visual Representation of the BraTS result -->
+                        <div class="relative bg-[#080c16] rounded-xl border border-slate-700 p-4 h-full flex flex-col items-center justify-center overflow-hidden shadow-inner min-h-[300px]">
+                            <!-- Background Grid -->
+                            <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNykiLz48L3N2Zz4=')] opacity-70 z-0"></div>
+                            
+                            <div class="z-10 text-center w-full">
+                                <div class="text-xs text-slate-500 uppercase tracking-widest mb-6">Reconstruction Spatiale PDE (Concept)</div>
+                                <div class="relative w-48 h-48 mx-auto" style="perspective: 800px;">
+                                    <!-- Brain abstract -->
+                                    <div class="absolute inset-0 bg-slate-800/50 rounded-[40%_60%_70%_30%/40%_50%_60%_50%] border border-slate-600 blur-[1px] animate-[spin_25s_linear_infinite] shadow-[inset_0_0_20px_rgba(0,0,0,0.8)]" style="transform: rotateX(45deg);"></div>
+                                    <!-- Tumor abstract (Prediction in Red) -->
+                                    <div class="absolute inset-8 bg-red-500/70 rounded-[50%_40%_30%_60%/60%_30%_70%_40%] mix-blend-screen shadow-[0_0_30px_rgba(239,68,68,0.5)] animate-[spin_15s_linear_infinite_reverse]" style="transform: rotateX(45deg) translateZ(20px);"></div>
+                                    <!-- Ground truth abstract (Green wireframe) -->
+                                    <div class="absolute inset-6 bg-transparent rounded-[45%_55%_35%_65%/55%_35%_65%_45%] border-[3px] border-green-500/60 animate-[spin_20s_linear_infinite]" style="transform: rotateX(45deg) translateZ(25px);"></div>
+                                </div>
+                                <div class="flex justify-center gap-6 mt-8 text-xs font-semibold uppercase tracking-wider text-slate-300">
+                                    <div class="flex items-center"><div class="w-3 h-3 bg-transparent border-2 border-green-500 rounded-sm mr-2 shadow-[0_0_8px_rgba(34,197,94,0.5)]"></div>Vérité Terrain</div>
+                                    <div class="flex items-center"><div class="w-3 h-3 bg-red-500 rounded-sm mr-2 shadow-[0_0_8px_rgba(239,68,68,0.8)]"></div>Prédiction Fluide</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Robotics -->
+            <div id="tab-robot" class="tab-content">
+                <div class="glass-panel p-8">
+                    <div class="mb-8 border-b border-slate-700 pb-6 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-2xl font-bold text-white mb-2">Contrôle Robotique (Pick & Place)</h3>
+                            <p class="text-slate-400">De la caméra Isaac Sim 4.5.0 aux moteurs articulés, orchestré par la Réaction-Diffusion.</p>
+                        </div>
+                        <div class="bg-indigo-500/10 border border-indigo-500/30 px-3 py-1 rounded text-indigo-300 text-xs font-bold">Step 2a & 2b ✅</div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-slate-800/50 rounded-xl p-6 border border-slate-700 flex flex-col items-center text-center">
+                            <div class="text-indigo-400 mb-4"><svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg></div>
+                            <div class="text-5xl font-black text-white mb-1 tracking-tighter">4.1 <span class="text-lg text-slate-500 font-medium">ms</span></div>
+                            <div class="text-sm text-slate-300 font-semibold uppercase mt-2">Latence Inférence</div>
+                            <p class="text-xs text-slate-500 mt-3">Vision (4 frames) + Proprioception → Commande. Boucle à 244 Hz.</p>
+                        </div>
+                        <div class="bg-slate-800/50 rounded-xl p-6 border border-slate-700 flex flex-col items-center text-center">
+                            <div class="text-emerald-400 mb-4"><svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
+                            <div class="text-5xl font-black text-white mb-1 tracking-tighter">0.013 <span class="text-lg text-slate-500 font-medium">MSE</span></div>
+                            <div class="text-sm text-slate-300 font-semibold uppercase mt-2">Imitation Learning</div>
+                            <p class="text-xs text-slate-500 mt-3">Apprentissage stable, sans divergence de gradient sur 50 epochs.</p>
+                        </div>
+                        <div class="bg-slate-800/50 rounded-xl p-6 border border-slate-700 flex flex-col items-center text-center">
+                            <div class="text-purple-400 mb-4"><svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5"></path></svg></div>
+                            <div class="text-5xl font-black text-white mb-1 tracking-tighter">100<span class="text-3xl text-slate-500 font-medium">%</span></div>
+                            <div class="text-sm text-slate-300 font-semibold uppercase mt-2">Fiabilité Isaac Sim</div>
+                            <p class="text-xs text-slate-500 mt-3">Zéro frame noire. Pipeline validé pour le transfert vers le robot physique (SO-101).</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 3: Video Scaling -->
+            <div id="tab-video" class="tab-content">
+                <div class="glass-panel p-8">
+                    <div class="mb-8 border-b border-slate-700 pb-6 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-2xl font-bold text-white mb-2">Scaling Temporel O(T·N)</h3>
+                            <p class="text-slate-400">Le problème des Transformers vidéo est quadratique. FluidVLA prouve une croissance quasi-linéaire.</p>
+                        </div>
+                        <div class="bg-indigo-500/10 border border-indigo-500/30 px-3 py-1 rounded text-indigo-300 text-xs font-bold">Step 1 ✅</div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                        <div>
+                            <h4 class="font-semibold text-slate-300 mb-6 uppercase text-xs tracking-widest">Évolution VRAM (2 ➔ 32 Frames)</h4>
+                            <div class="space-y-5">
+                                <div>
+                                    <div class="flex justify-between text-sm mb-2"><span class="font-medium text-white">FluidVLA (32 frames)</span><span class="text-indigo-400 font-bold bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">114.6 MB</span></div>
+                                    <div class="w-full bg-slate-800 rounded-full h-3"><div class="bg-indigo-500 h-3 rounded-full" style="width: 15%; box-shadow: 0 0 10px rgba(99,102,241,0.6);"></div></div>
+                                </div>
+                                <div class="pt-2">
+                                    <div class="flex justify-between text-sm mb-2"><span class="font-medium text-slate-400">Transformer (Estimé 32 frames)</span><span class="text-red-400 font-bold bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20">~4,352 MB</span></div>
+                                    <div class="w-full bg-slate-800 rounded-full h-3"><div class="bg-red-500 h-3 rounded-full" style="width: 100%"></div></div>
+                                </div>
+                            </div>
+                            <div class="mt-8 p-4 bg-slate-800/30 rounded-lg border border-slate-700 border-l-4 border-l-indigo-500">
+                                <p class="text-sm text-slate-300">FluidVLA traite <strong>16x plus de frames</strong> vidéo en n'utilisant que <strong>2.43x plus de VRAM</strong>. Croissance propre, idéale pour un flux continu H24.</p>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-center justify-center">
+                            <div class="relative w-48 h-48 flex items-center justify-center">
+                                <div class="absolute inset-0 border-[10px] border-slate-800 rounded-full"></div>
+                                <div class="absolute inset-0 border-[10px] border-indigo-500 rounded-full border-t-transparent border-r-transparent transform -rotate-45 drop-shadow-[0_0_15px_rgba(99,102,241,0.5)]"></div>
+                                <div class="text-center">
+                                    <div class="text-6xl font-black text-white">38<span class="text-indigo-500 text-4xl">x</span></div>
+                                    <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Moins Lourd</div>
+                                </div>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-6 text-center max-w-xs">Gain théorique de mémoire par rapport au KV-Cache d'un modèle basé sur l'Attention à 32 frames (O(T²·N)).</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 4: Adaptive Compute -->
+            <div id="tab-compute" class="tab-content">
+                <div class="glass-panel p-8 text-center">
+                    <div class="flex justify-between items-center mb-6 max-w-3xl mx-auto">
+                        <h3 class="text-2xl font-bold text-left">Le "Dial" (Équilibre de Turing)</h3>
+                        <div class="bg-indigo-500/10 border border-indigo-500/30 px-3 py-1 rounded text-indigo-300 text-xs font-bold">Step 1.5 ✅</div>
+                    </div>
+                    <p class="text-slate-300 mb-10 max-w-3xl mx-auto text-left">L'architecture arrête d'intégrer l'équation dès que la scène (Turbulence) se stabilise. L'opérateur paramètre `epsilon` <strong>à la volée lors de l'inférence</strong> (sans réentraînement) pour dicter le comportement de l'IA face au monde physique.</p>
+                    
+                    <div class="flex flex-col md:flex-row gap-4 justify-center max-w-3xl mx-auto mb-10">
+                        <button onclick="setDial(0)" id="dial-0" class="flex-1 p-5 rounded-xl border border-slate-600 bg-slate-800 hover:bg-slate-700 transition-all text-left group">
+                            <div class="flex justify-between items-center mb-2">
+                                <div class="dial-title font-bold text-white group-hover:text-indigo-400 transition-colors">Quality Mode</div>
+                                <div class="dial-badge text-xs bg-slate-900 px-2 py-1 rounded text-slate-400">eps: 0.08</div>
+                            </div>
+                            <div class="text-xs text-slate-400">Aucun arrêt anticipé. Maximum de propagation pour scènes chaotiques.</div>
+                        </button>
+                        <button onclick="setDial(1)" id="dial-1" class="flex-1 p-5 rounded-xl border-2 border-indigo-500 bg-indigo-600/10 transition-all text-left shadow-[0_0_20px_rgba(99,102,241,0.2)]">
+                            <div class="flex justify-between items-center mb-2">
+                                <div class="dial-title font-bold text-indigo-400">Adaptive Mode</div>
+                                <div class="dial-badge text-xs bg-indigo-900/50 border border-indigo-500/30 px-2 py-1 rounded text-indigo-300">eps: 0.09</div>
+                            </div>
+                            <div class="text-xs text-slate-300">Équilibre parfait. Le modèle s'éteint si la scène est reconnue stable.</div>
+                        </button>
+                    </div>
+
+                    <div class="bg-[#080c16] rounded-2xl p-8 border border-slate-700 max-w-2xl mx-auto flex items-center justify-around shadow-inner">
+                        <div class="text-center w-1/2">
+                            <div class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Étapes PDE moy.</div>
+                            <div class="text-4xl font-black text-indigo-400 tabular-nums drop-shadow-[0_0_10px_rgba(99,102,241,0.5)]" id="dial-steps">7.5 <span class="text-xl text-slate-600 drop-shadow-none">/ 12</span></div>
+                        </div>
+                        <div class="w-px h-16 bg-slate-700"></div>
+                        <div class="text-center w-1/2">
+                            <div class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Test MSE</div>
+                            <div class="text-4xl font-black text-white tabular-nums" id="dial-mse">0.196</div>
+                        </div>
+                    </div>
+                    <div id="dial-saving" class="mt-4 text-sm font-bold tracking-wide text-emerald-400 opacity-100 transition-opacity">
+                        ~37% de compute économisé en temps réel
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 5: Image Step 0 -->
+            <div id="tab-image" class="tab-content">
+                <div class="glass-panel p-8">
+                    <div class="mb-8 border-b border-slate-700 pb-6 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-2xl font-bold text-white mb-2">Classification Image (Le Proof of Concept)</h3>
+                            <p class="text-slate-400">Prouver que la réaction-diffusion extrait des caractéristiques visuelles utiles, de base, sans la moindre couche d'attention.</p>
+                        </div>
+                        <div class="bg-indigo-500/10 border border-indigo-500/30 px-3 py-1 rounded text-indigo-300 text-xs font-bold">Step 0 ✅</div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="bg-slate-800/40 rounded-xl p-6 border border-slate-700">
+                            <div class="flex items-center justify-between mb-4">
+                                <h4 class="text-lg font-bold text-white">MNIST</h4>
+                                <span class="text-xs text-slate-500 font-mono">0.30M params</span>
+                            </div>
+                            <div class="text-4xl font-black text-indigo-400 mb-2">91.75% <span class="text-sm text-slate-500 font-normal">Précision</span></div>
+                            <p class="text-sm text-slate-400 mt-4 border-t border-slate-700 pt-4">Le réseau assimile la topologie des chiffres uniquement via la diffusion de l'information entre pixels adjacents.</p>
+                        </div>
+                        <div class="bg-slate-800/40 rounded-xl p-6 border border-slate-700">
+                            <div class="flex items-center justify-between mb-4">
+                                <h4 class="text-lg font-bold text-white">CIFAR-10</h4>
+                                <span class="text-xs text-slate-500 font-mono">0.31M params</span>
+                            </div>
+                            <div class="text-4xl font-black text-indigo-400 mb-2">62.25% <span class="text-sm text-slate-500 font-normal">Précision</span></div>
+                            <p class="text-sm text-slate-400 mt-4 border-t border-slate-700 pt-4">Bien qu'inférieur à un ResNet, ce score prouve la viabilité mécanique de l'architecture sur des images couleurs complexes.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- FULL ROADMAP SECTION -->
+    <section id="roadmap-section" class="py-24 px-6 border-t border-slate-800/80 bg-[#080c16] relative overflow-hidden">
+        <div class="max-w-4xl mx-auto relative z-10">
+            <div class="text-center mb-16">
+                <span class="text-indigo-400 text-xs font-bold uppercase tracking-widest mb-2 block">Vision Stratégique</span>
+                <h2 class="text-4xl font-bold mb-4">Séquence Complète & Roadmap</h2>
+                <p class="text-slate-400 text-lg">De la physique à la cognition bio-inspirée.</p>
+            </div>
+
+            <!-- Timeline Container -->
+            <div class="relative pb-10">
+                <div class="timeline-line"></div>
+
+                <!-- Phase 1 -->
+                <div class="relative pl-12 mb-8">
+                    <div class="absolute left-0 top-1.5 w-6 h-6 bg-indigo-600 rounded-full border-4 border-[#080c16] z-10 flex items-center justify-center"></div>
+                    <div class="glass-panel rounded-xl overflow-hidden">
+                        <button onclick="toggleAccordion('phase1')" class="w-full px-6 py-4 flex justify-between items-center bg-slate-800/40 hover:bg-slate-800/60 transition-colors text-left">
+                            <div>
+                                <span class="text-xs font-bold text-indigo-400 uppercase tracking-wider block mb-1">En Cours</span>
+                                <h3 class="text-xl font-bold text-white">Phase 1 : Validation Architecturale</h3>
+                            </div>
+                            <svg id="icon-phase1" class="w-6 h-6 text-slate-400 accordion-icon transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div id="phase1" class="accordion-content expanded bg-slate-900/50">
+                            <div class="p-6 text-sm text-slate-300 space-y-3">
+                                <div class="flex items-center"><span class="text-green-400 mr-3">✅</span> <strong>Step 0 :</strong> Classification Image (MNIST 91.7%, CIFAR 62.2%)</div>
+                                <div class="flex items-center"><span class="text-green-400 mr-3">✅</span> <strong>Step 1 :</strong> Scaling Vidéo O(T·N) & Adaptive Compute (Dial)</div>
+                                <div class="flex items-center"><span class="text-green-400 mr-3">✅</span> <strong>Step 2a :</strong> Imitation Learning VLA Synthétique (MSE 0.013, 4.1ms)</div>
+                                <div class="flex items-center"><span class="text-green-400 mr-3">✅</span> <strong>Step 2b :</strong> Isaac Sim Caméra Validée (100% détection)</div>
+                                <div class="flex items-center"><span class="text-blue-400 mr-3 animate-spin">🔄</span> <strong>Step 2c :</strong> Isaac Sim Collecte & Training Physique</div>
+                                <div class="flex items-center"><span class="text-slate-500 mr-3">⏳</span> <strong class="text-slate-400">Step 3 :</strong> Hardware Réel SO-101 (Jetson Orin Nano, <50ms)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase 2 -->
+                <div class="relative pl-12 mb-8">
+                    <div class="absolute left-0 top-1.5 w-6 h-6 bg-slate-700 rounded-full border-4 border-[#080c16] z-10"></div>
+                    <div class="glass-panel rounded-xl overflow-hidden">
+                        <button onclick="toggleAccordion('phase2')" class="w-full px-6 py-4 flex justify-between items-center bg-slate-800/40 hover:bg-slate-800/60 transition-colors text-left">
+                            <div>
+                                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Planifié</span>
+                                <h3 class="text-xl font-bold text-slate-200">Phase 2 : Cognition Bio-Inspirée</h3>
+                            </div>
+                            <svg id="icon-phase2" class="w-6 h-6 text-slate-500 accordion-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div id="phase2" class="accordion-content bg-slate-900/50">
+                            <div class="p-6 text-sm text-slate-400 space-y-4">
+                                <p class="italic text-slate-500 border-l-2 border-slate-700 pl-3 mb-4">Inspiré de LiquidBrain (Rust, 2024). Traduction des intuitions biologiques en maths différentiables.</p>
+                                <div><strong class="text-slate-200">2.1 — Fatigue Synaptique :</strong> Decay pour éviter la saturation du h-state global sur 24h. Priorité aux événements récents.</div>
+                                <div><strong class="text-slate-200">2.2 — Pruning Spatial Dynamique :</strong> Masque spatial temps réel pour éviter le calcul sur les zones statiques (gain ~10x FLOPs).</div>
+                                <div><strong class="text-slate-200">2.3 — Inhibition Sémantique :</strong> Compétition entre canaux pour affiner la prise de décision motrice.</div>
+                                <div><strong class="text-slate-200">2.4 — Saliency Map / dt Spatial :</strong> Les zones actives intègrent plus vite l'équation. Attention émergente sans O(N²).</div>
+                                <div><strong class="text-slate-200">2.5 — Hebbian One-Shot Teaching :</strong> Apprentissage d'un geste physique sans backprop complète.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase 3 -->
+                <div class="relative pl-12 mb-8">
+                    <div class="absolute left-0 top-1.5 w-6 h-6 bg-slate-700 rounded-full border-4 border-[#080c16] z-10"></div>
+                    <div class="glass-panel rounded-xl overflow-hidden">
+                        <button onclick="toggleAccordion('phase3')" class="w-full px-6 py-4 flex justify-between items-center bg-slate-800/40 hover:bg-slate-800/60 transition-colors text-left">
+                            <div>
+                                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Planifié</span>
+                                <h3 class="text-xl font-bold text-slate-200">Phase 3 : Réflexion & Planification (sans LLM)</h3>
+                            </div>
+                            <svg id="icon-phase3" class="w-6 h-6 text-slate-500 accordion-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div id="phase3" class="accordion-content bg-slate-900/50">
+                            <div class="p-6 text-sm text-slate-400 space-y-4">
+                                <p class="italic text-slate-500 border-l-2 border-slate-700 pl-3 mb-4">Transformer le réflexe (cervelet) en anticipation (cortex), sans dépendre de modèles cloud 55B.</p>
+                                <div><strong class="text-slate-200">3.1 — BeliefField :</strong> Mémoire spatiale persistante entre les frames. Permet de se souvenir de l'emplacement d'un objet occulté.</div>
+                                <div><strong class="text-slate-200">3.2 — Rollout Imaginaire :</strong> Simuler plusieurs trajectoires motrices candidates en espace latent avant d'agir physiquement (Inspiré de MuZero).</div>
+                                <div><strong class="text-slate-200">3.3 — Teacher Distillation :</strong> Hériter de la compréhension sémantique de RT-2 et de la motricité de Pi0 via distillation hors ligne, gardant un étudiant PDE ultra-léger (0.67M params).</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase 4 -->
+                <div class="relative pl-12 mb-8">
+                    <div class="absolute left-0 top-1.5 w-6 h-6 bg-slate-700 rounded-full border-4 border-[#080c16] z-10"></div>
+                    <div class="glass-panel rounded-xl overflow-hidden">
+                        <button onclick="toggleAccordion('phase4')" class="w-full px-6 py-4 flex justify-between items-center bg-slate-800/40 hover:bg-slate-800/60 transition-colors text-left">
+                            <div>
+                                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Long Terme</span>
+                                <h3 class="text-xl font-bold text-slate-200">Phase 4 : Raisonnement & Universalité</h3>
+                            </div>
+                            <svg id="icon-phase4" class="w-6 h-6 text-slate-500 accordion-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div id="phase4" class="accordion-content bg-slate-900/50">
+                            <div class="p-6 text-sm text-slate-400 space-y-4">
+                                <p class="italic text-slate-500 border-l-2 border-slate-700 pl-3 mb-4">Devenir pleinement multimodal. Raisonner au-delà de la motricité pure.</p>
+                                <div><strong class="text-slate-200">4.1 — Diffusion Locale Textuelle :</strong> FluidTextEncoder O(N). Le texte est traité comme une séquence temporelle de diffusion (Laplacian1D).</div>
+                                <div><strong class="text-slate-200">4.2 — Symbolic Anchors :</strong> Registre global O(K) pour stocker les variables et entités critiques, bypassant la diffusion locale pour les relations longue distance.</div>
+                                <div><strong class="text-slate-200">4.3 — ScratchPad Externe :</strong> Brouillon explicite en mémoire pour résoudre des problèmes mathématiques ou logiques en multi-étapes.</div>
+                                <div><strong class="text-slate-200">4.4 — Rollout Raisonnement :</strong> Étendre l'imagination motrice (Phase 3.2) aux stratégies de raisonnement symbolique (ex: tester plusieurs théorèmes).</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase 4.5 (Grand Vision) -->
+                <div class="relative pl-12">
+                    <div class="absolute left-[-2px] top-1.5 w-7 h-7 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full border-4 border-[#080c16] z-10 shadow-[0_0_15px_rgba(236,72,153,0.5)]"></div>
+                    <div class="glass-panel rounded-xl overflow-hidden border border-pink-500/30 shadow-[0_0_30px_-10px_rgba(236,72,153,0.2)]">
+                        <button onclick="toggleAccordion('phase45')" class="w-full px-6 py-5 flex justify-between items-center bg-gradient-to-r from-slate-900 to-slate-800 hover:from-slate-800 hover:to-slate-700 transition-colors text-left">
+                            <div>
+                                <span class="text-xs font-bold text-pink-400 uppercase tracking-widest block mb-1">L'Horizon Ultime</span>
+                                <h3 class="text-2xl font-bold text-white">Phase 4.5 : Domaines Scientifiques & Connexion Quantique</h3>
+                            </div>
+                            <svg id="icon-phase45" class="w-6 h-6 text-pink-400 accordion-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div id="phase45" class="accordion-content bg-slate-900/80">
+                            <div class="p-6 text-sm text-slate-300">
+                                <p class="mb-6 text-base font-medium">FluidVLA n'est pas adapté à ces domaines par analogie. La PDE de réaction-diffusion est la langue <em>native</em> de ces phénomènes physiques.</p>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                                    <div class="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+                                        <h4 class="text-indigo-400 font-bold mb-2 uppercase text-xs tracking-wider">1. Temps Réel Embarqué (Edge)</h4>
+                                        <ul class="space-y-1 text-slate-400">
+                                            <li>• Conduite autonome (<10ms)</li>
+                                            <li>• Prothèses actives (EMG en 4ms)</li>
+                                            <li>• Drones en essaims (Intelligence locale)</li>
+                                            <li>• Sous-marins ROV (Zéro Cloud)</li>
+                                        </ul>
+                                    </div>
+                                    <div class="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+                                        <h4 class="text-emerald-400 font-bold mb-2 uppercase text-xs tracking-wider">2. Biologie & Santé (Séquences Longues)</h4>
+                                        <ul class="space-y-1 text-slate-400">
+                                            <li>• Séquençage ADN (Millions de bases en O(N))</li>
+                                            <li>• Imagerie Médicale 3D (Déjà validé)</li>
+                                            <li>• Épidémiologie (Modélisation de propagation)</li>
+                                        </ul>
+                                    </div>
+                                    <div class="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+                                        <h4 class="text-cyan-400 font-bold mb-2 uppercase text-xs tracking-wider">3. Climat & Terre</h4>
+                                        <ul class="space-y-1 text-slate-400">
+                                            <li>• Météo & Aérodynamique (Navier-Stokes)</li>
+                                            <li>• Sismologie (Détection d'ondes en millisecondes)</li>
+                                            <li>• Océanographie autonome</li>
+                                        </ul>
+                                    </div>
+                                    <div class="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+                                        <h4 class="text-orange-400 font-bold mb-2 uppercase text-xs tracking-wider">4. Humain & Multimédia</h4>
+                                        <ul class="space-y-1 text-slate-400">
+                                            <li>• Physique Jeu Vidéo (Fluides en temps réel)</li>
+                                            <li>• Marchés financiers (Carnets d'ordres continus)</li>
+                                            <li>• Puces Neuromorphiques Analogiques</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class="bg-gradient-to-r from-pink-900/30 to-purple-900/30 border border-pink-500/30 p-5 rounded-xl">
+                                    <h4 class="text-lg font-bold text-white mb-3 flex items-center">
+                                        <span class="bg-pink-500 w-2 h-2 rounded-full mr-3 animate-pulse"></span>
+                                        La Connexion Quantique
+                                    </h4>
+                                    <p class="mb-4 text-slate-300">L'équation de Schrödinger est une PDE : <code class="bg-black/50 px-2 py-1 rounded text-pink-300 font-mono text-xs ml-2">iℏ ∂ψ/∂t = -ℏ²/2m ∇²ψ + V(x)ψ</code></p>
+                                    <p class="text-slate-400 mb-4">Structurellement, c'est exactement FluidVLA : le Laplacien simule la diffusion, le ReactionMLP simule le potentiel local. Contrairement aux GNNs, FluidVLA modélise explicitement le vide spatial.</p>
+                                    <ul class="space-y-2 text-slate-300">
+                                        <li><strong>Drug Discovery :</strong> Remplacer les graphes par une grille 3D où les champs électrostatiques de la protéine et du ligand diffusent et interagissent (PDBbind).</li>
+                                        <li><strong>Intrication :</strong> Le BeliefField permet de simuler un couplage persistant entre deux nœuds distants.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- QUICKSTART & RESOURCES -->
+    <section class="py-24 px-6 border-t border-slate-800/80 bg-[#040814]">
+        <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12">
+            
+            <!-- Quickstart -->
+            <div>
+                <h3 class="text-2xl font-bold mb-6">🚀 Quickstart</h3>
+                <div class="rounded-lg overflow-hidden border border-slate-700 bg-[#0f172a] shadow-2xl">
+                    <div class="flex items-center px-4 py-2 bg-slate-800 border-b border-slate-700">
+                        <div class="flex space-x-2">
+                            <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                        </div>
+                        <div class="ml-4 text-xs text-slate-400 font-mono">bash</div>
+                    </div>
+                    <div class="p-4 overflow-x-auto">
+<pre class="font-mono text-sm text-slate-300 leading-relaxed">
+<span class="text-slate-500"># Installez l'environnement</span>
+pip install torch torchvision torchaudio
+pip install tqdm tensorboard pytest matplotlib
+
+<span class="text-slate-500"># Lancez le POC Vision O(N)</span>
+python experiments/step0_mnist/train_step0.py --model small
+
+<span class="text-slate-500"># Vérifiez la dynamique de scaling vidéo</span>
+python experiments/step1_video/train_step1_video.py --epochs 30
+
+<span class="text-slate-500"># Simulez l'Adaptive Compute (Le "Dial")</span>
+python diagnose.py --dt 0.1 --epsilon 0.09
+
+<span class="text-slate-500"># Entraînez le bras robotique virtuel</span>
+python experiments/step2_sim/train_step2.py --epochs 50
+</pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- References -->
+            <div>
+                <h3 class="text-2xl font-bold mb-6">📚 Références Fondamentales</h3>
+                <div class="glass-panel p-6 max-h-[350px] overflow-y-auto custom-scrollbar">
+                    <ol class="list-decimal pl-5 space-y-3 text-sm text-slate-400">
+                        <li><span class="text-slate-300">Turing, A. M. (1952).</span> <em>The Chemical Basis of Morphogenesis.</em></li>
+                        <li><span class="text-slate-300">Chen, R. T. et al. (2018).</span> <em>Neural Ordinary Differential Equations.</em></li>
+                        <li><span class="text-slate-300">Dosovitskiy, A. et al. (2020).</span> <em>An Image is Worth 16x16 Words.</em></li>
+                        <li><span class="text-slate-300">Brohan, A. et al. (2023).</span> <em>RT-2: Vision-Language-Action Models.</em></li>
+                        <li><span class="text-slate-300">Black, K. et al. (2024).</span> <em>Pi0: A Vision-Language-Action Flow Model.</em></li>
+                        <li><span class="text-slate-300">Schrittwieser, J. et al. (2020).</span> <em>MuZero.</em></li>
+                        <li><span class="text-slate-300">Hinton, G. et al. (2015).</span> <em>Distilling the Knowledge in a Neural Network.</em></li>
+                        <li><span class="text-slate-300">Hebb, D. O. (1949).</span> <em>The Organization of Behavior.</em></li>
+                        <li><span class="text-slate-300">LiquidBrain V115 (2024).</span> <em>Synaptic fatigue, inhibition and Hebbian learning.</em></li>
+                        <li><span class="text-slate-300">Schrödinger, E. (1926).</span> <em>Quantisierung als Eigenwertproblem.</em></li>
+                        <li><span class="text-slate-300">Werbos, P. J. (1990).</span> <em>Backpropagation through time.</em></li>
+                        <li><span class="text-slate-300">Graves, A. (2014).</span> <em>Neural Turing Machines.</em></li>
+                        <li><span class="text-slate-300">Jumper, J. et al. (2021).</span> <em>AlphaFold.</em></li>
+                    </ol>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <footer class="py-8 text-center text-slate-600 text-xs border-t border-slate-800 bg-[#040814]">
+        Recherche Indépendante • Architecture FluidVLA • 2026
+    </footer>
+
+    <!-- INTERACTIVE SCRIPTS -->
+    <script>
+        // --- ANIMATION 1 : TRANSFORMER O(N^2) ---
+        const tCanvas = document.getElementById('transformerCanvas');
+        const tCtx = tCanvas.getContext('2d');
+        const slider = document.getElementById('nodeSlider');
+        const nodeCountUI = document.getElementById('nodeCount');
+        const connCountUI = document.getElementById('connectionCount');
+        const warningUI = document.getElementById('memoryWarning');
+        
+        let targetNodes = parseInt(slider.value);
+        let currentNodes = targetNodes;
+        
+        function drawTransformer() {
+            tCtx.clearRect(0, 0, tCanvas.width, tCanvas.height);
+            const cx = tCanvas.width / 2, cy = tCanvas.height / 2, radius = 100;
+            currentNodes += (targetNodes - currentNodes) * 0.1;
+            const n = Math.round(currentNodes);
+            
+            const nodes = [];
+            for (let i = 0; i < n; i++) {
+                const angle = (i / n) * Math.PI * 2;
+                nodes.push({ x: cx + Math.cos(angle) * radius, y: cy + Math.sin(angle) * radius });
+            }
+            
+            const totalConnections = (n * (n - 1)) / 2;
+            nodeCountUI.innerText = n;
+            connCountUI.innerText = totalConnections.toLocaleString();
+            
+            if(totalConnections > 300) {
+                connCountUI.classList.remove('text-red-400');
+                connCountUI.classList.add('text-red-500');
+                warningUI.classList.remove('opacity-0');
+            } else {
+                connCountUI.classList.add('text-red-400');
+                connCountUI.classList.remove('text-red-500');
+                warningUI.classList.add('opacity-0');
+            }
+
+            const stress = Math.min(1, totalConnections / 500);
+            tCtx.strokeStyle = `rgba(${100 + stress*155}, ${150 - stress*100}, ${250 - stress*200}, ${0.1 + (1-stress)*0.2})`;
+            tCtx.lineWidth = 1.5;
+
+            tCtx.beginPath();
+            for (let i = 0; i < n; i++) {
+                for (let j = i + 1; j < n; j++) {
+                    tCtx.moveTo(nodes[i].x, nodes[i].y);
+                    tCtx.lineTo(nodes[j].x, nodes[j].y);
+                }
+            }
+            tCtx.stroke();
+
+            tCtx.fillStyle = '#cbd5e1'; 
+            for (let i = 0; i < n; i++) {
+                tCtx.beginPath();
+                tCtx.arc(nodes[i].x, nodes[i].y, 4, 0, Math.PI * 2);
+                tCtx.fill();
+            }
+            requestAnimationFrame(drawTransformer);
+        }
+        
+        slider.addEventListener('input', (e) => { targetNodes = parseInt(e.target.value); });
+        drawTransformer();
+
+        // --- ANIMATION 2 : FLUIDVLA O(N) - INK SIMULATION ---
+        const fCanvas = document.getElementById('fluidCanvas');
+        const fCtx = fCanvas.getContext('2d');
+        const gridSize = 50; // Haute résolution pour un effet plus doux
+        const cellSize = fCanvas.width / gridSize;
+        let grid = Array(gridSize).fill().map(() => Array(gridSize).fill(0));
+        let nextGrid = Array(gridSize).fill().map(() => Array(gridSize).fill(0));
+        
+        // Paramètres ajustés pour ressembler à de l'encre lente
+        const diffusionRate = 0.08; 
+        const damping = 0.99; 
+        
+        fCanvas.addEventListener('mousedown', (e) => {
+            const rect = fCanvas.getBoundingClientRect();
+            const x = Math.floor((e.clientX - rect.left) / cellSize);
+            const y = Math.floor((e.clientY - rect.top) / cellSize);
+            // Grosse goutte d'encre douce
+            if (x >= 2 && x < gridSize-2 && y >= 2 && y < gridSize-2) {
+                grid[y][x] = 15.0;
+                grid[y-1][x] = 8.0; grid[y+1][x] = 8.0; grid[y][x-1] = 8.0; grid[y][x+1] = 8.0;
+                grid[y-1][x-1] = 4.0; grid[y-1][x+1] = 4.0; grid[y+1][x-1] = 4.0; grid[y+1][x+1] = 4.0;
+            }
+        });
+        
+        // Goutte initiale
+        setTimeout(() => { 
+            grid[25][25] = 15.0; 
+            grid[24][25] = 8.0; grid[26][25] = 8.0; grid[25][24] = 8.0; grid[25][26] = 8.0;
+        }, 800);
+        
+        // Gouttes aléatoires
+        setInterval(() => { 
+            if(Math.random() > 0.6) {
+                let rx = Math.floor(Math.random()*(gridSize-6))+3;
+                let ry = Math.floor(Math.random()*(gridSize-6))+3;
+                grid[ry][rx] += 8.0; 
+            }
+        }, 4000);
+
+        function updateFluid() {
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    let val = grid[y][x], neighbors = 0, count = 0;
+                    if (y > 0) { neighbors += grid[y-1][x]; count++; }
+                    if (y < gridSize - 1) { neighbors += grid[y+1][x]; count++; }
+                    if (x > 0) { neighbors += grid[y][x-1]; count++; }
+                    if (x < gridSize - 1) { neighbors += grid[y][x+1]; count++; }
+                    
+                    nextGrid[y][x] = (val + (diffusionRate * (neighbors - (count * val)))) * damping;
+                }
+            }
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) grid[y][x] = nextGrid[y][x];
+            }
+        }
+        
+        function drawFluid() {
+            updateFluid();
+            // Effet de traînée pour l'encre
+            fCtx.fillStyle = 'rgba(15, 23, 42, 0.15)'; 
+            fCtx.fillRect(0, 0, fCanvas.width, fCanvas.height);
+            
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    const val = grid[y][x];
+                    if (val > 0.05) {
+                        fCtx.beginPath();
+                        // Cercle lissé
+                        fCtx.arc(x * cellSize + cellSize/2, y * cellSize + cellSize/2, cellSize*0.8, 0, Math.PI*2);
+                        
+                        // Color mapping : Encre violette/bleue sombre
+                        let intensity = Math.min(1, val / 3);
+                        let r = Math.floor(99 * intensity);
+                        let g = Math.floor(102 * intensity);
+                        let b = Math.floor(241 * intensity + 50); // Base indigo
+                        let alpha = Math.min(0.8, val);
+                        
+                        fCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+                        fCtx.fill();
+                    }
+                }
+            }
+            requestAnimationFrame(drawFluid);
+        }
+        drawFluid();
+
+        // --- TAB SYSTEM (Results) ---
+        function openTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = "tab-btn px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 text-slate-400 hover:text-white hover:bg-slate-700/50";
+            });
+            
+            document.getElementById(tabId).classList.add('active');
+            
+            const activeBtn = document.getElementById('btn-' + tabId.split('-')[1]);
+            activeBtn.className = "tab-btn px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 bg-indigo-600 text-white shadow-lg shadow-indigo-500/30";
+        }
+
+        // --- DIAL SYSTEM ---
+        const dialData = [
+            { steps: "12.0", mse: "0.178", saving: "0% (Compute Maximum)" },
+            { steps: "7.5", mse: "0.196", saving: "~37% de compute économisé" }
+        ];
+        function setDial(idx) {
+            document.querySelectorAll('[id^="dial-"]').forEach(el => {
+                if(el.tagName === 'BUTTON') {
+                    el.className = "flex-1 p-5 rounded-xl border border-slate-600 bg-slate-800 hover:bg-slate-700 transition-all text-left group";
+                    el.querySelector('.dial-title').className = "dial-title font-bold text-white group-hover:text-indigo-400 transition-colors";
+                    el.querySelector('.dial-badge').className = "dial-badge text-xs bg-slate-900 px-2 py-1 rounded text-slate-400";
+                }
+            });
+            
+            const activeDial = document.getElementById('dial-' + idx);
+            activeDial.className = "flex-1 p-5 rounded-xl border-2 border-indigo-500 bg-indigo-600/10 transition-all text-left shadow-[0_0_15px_rgba(99,102,241,0.2)]";
+            activeDial.querySelector('.dial-title').className = "dial-title font-bold text-indigo-400";
+            activeDial.querySelector('.dial-badge').className = "dial-badge text-xs bg-indigo-900/50 border border-indigo-500/30 px-2 py-1 rounded text-indigo-300";
+            
+            document.getElementById('dial-steps').innerHTML = `${dialData[idx].steps} <span class="text-xl text-slate-600">/ 12</span>`;
+            document.getElementById('dial-mse').innerText = dialData[idx].mse;
+            
+            const savingEl = document.getElementById('dial-saving');
+            savingEl.innerText = dialData[idx].saving;
+            savingEl.className = `mt-4 text-sm font-bold tracking-wide transition-opacity duration-300 ${idx === 1 ? 'text-emerald-400 opacity-100' : 'opacity-0'}`;
+            
+            ['dial-steps', 'dial-mse'].forEach(id => {
+                const el = document.getElementById(id);
+                el.style.transform = 'scale(1.1)';
+                setTimeout(() => el.style.transform = 'scale(1)', 150);
+            });
+        }
+
+        // --- ACCORDION TIMELINE ---
+        function toggleAccordion(phaseId) {
+            const content = document.getElementById(phaseId);
+            const isExpanded = content.classList.contains('expanded');
+            
+            if (isExpanded) {
+                content.classList.remove('expanded');
+            } else {
+                content.classList.add('expanded');
+            }
+        }
+    </script>
+</body>
+</html>

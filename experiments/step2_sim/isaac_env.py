@@ -25,7 +25,7 @@ import torch
 import torch.nn.functional as F
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from src.core.fluid_model import FluidBotVLA
+from fluidvla.core import FluidBotVLA
 
 # ─────────────────────────────────────────
 # Constants
@@ -362,7 +362,7 @@ class IsaacPickPlace:
             print(f"[Isaac Sim] Post-warmup frame check: max={frame_max:.4f}")
             
             self.available = True
-            print(f"[Isaac Sim] ✅ Initialized (camera {'OK' if frame_max > 0.01 else 'BLACK'})")
+            print(f"[Isaac Sim] [OK] Initialized (camera {'OK' if frame_max > 0.01 else 'BLACK'})")
 
     def _capture_frame(self, retries: int = 1) -> np.ndarray:
         """
@@ -621,14 +621,14 @@ class IsaacPickPlace:
 #     with open(save_path / 'metadata.json', 'w') as f:
 #         json.dump(meta, f, indent=2)
 
-#     print(f"\n✅ Done | Success: {meta['success_rate']*100:.1f}% | "
+#     print(f"\n[OK] Done | Success: {meta['success_rate']*100:.1f}% | "
 #           f"Total steps: {total_steps}")
 #     print(f"   Metadata: {save_path / 'metadata.json'}")
 #     print(f"   Train:    python experiments/step2_sim/train_step2.py "
 #           f"--dataset {save_dir}")
 
 #     return meta
-def collect_demonstrations(env, num_episodes: int = 100, save_dir: str = "./data/step2"):
+def collect_demonstrations(env, num_episodes: int = 100, save_dir: str = "./data/step2_sim"):
     import gc
     save_path = Path(save_dir)
     save_path.mkdir(parents=True, exist_ok=True)
@@ -734,7 +734,7 @@ def collect_demonstrations(env, num_episodes: int = 100, save_dir: str = "./data
     with open(save_path / 'metadata.json', 'w') as f:
         json.dump(meta, f, indent=2)
 
-    print(f"\n✅ Done | Success: {meta['success_rate']*100:.1f}% | "
+    print(f"\n[OK] Done | Success: {meta['success_rate']*100:.1f}% | "
           f"Total steps: {total_steps}")
     print(f"   Metadata: {save_path / 'metadata.json'}")
     print(f"   Train:    python experiments/step2_sim/train_step2.py "
@@ -753,7 +753,7 @@ def debug_visualize(save_dir: str, episode: int = 0, output: str = "debug_frames
     """
     ep_file = Path(save_dir) / f"episode_{episode:04d}.npz"
     if not ep_file.exists():
-        print(f"❌ File not found: {ep_file}")
+        print(f"[FAIL] File not found: {ep_file}")
         return
 
     data    = np.load(ep_file)
@@ -767,7 +767,7 @@ def debug_visualize(save_dir: str, episode: int = 0, output: str = "debug_frames
           f"mean={frames.mean():.4f}")
 
     if frames.max() < 0.01:
-        print("  ⚠️  ALL FRAMES ARE BLACK — camera capture failed during collection")
+        print("  [WARN] ALL FRAMES ARE BLACK - camera capture failed during collection")
 
     import matplotlib
     matplotlib.use('Agg')
@@ -797,7 +797,7 @@ def debug_visualize(save_dir: str, episode: int = 0, output: str = "debug_frames
 
     plt.tight_layout()
     plt.savefig(output, dpi=120, bbox_inches='tight')
-    print(f"  Saved → {output}")
+    print(f"  Saved -> {output}")
 
 
 # ─────────────────────────────────────────
@@ -813,7 +813,7 @@ def evaluate_policy(env, model: torch.nn.Module, n_episodes: int,
     steps_list = []
 
     print(f"\n{'='*55}")
-    print(f"Evaluating FluidVLA — {n_episodes} episodes")
+    print(f"Evaluating FluidVLA - {n_episodes} episodes")
     print(f"{'='*55}")
 
     for ep in range(n_episodes):
@@ -865,12 +865,12 @@ def evaluate_policy(env, model: torch.nn.Module, n_episodes: int,
     lat = results['latency_mean_ms']
     stp = results['avg_pde_steps']
     print(f"\n{'='*55}")
-    print(f"  Success rate : {sr:.1f}%  {'✅' if sr >= 70 else '❌'}  (target >70%)")
-    print(f"  Latency mean : {lat:.1f}ms  {'✅' if lat <= 50 else '❌'}  (target <50ms)")
+    print(f"  Success rate : {sr:.1f}%  {'[OK]' if sr >= 70 else '[FAIL]'}  (target >70%)")
+    print(f"  Latency mean : {lat:.1f}ms  {'[OK]' if lat <= 50 else '[FAIL]'}  (target <50ms)")
     print(f"  Latency p95  : {results['latency_p95_ms']:.1f}ms")
     if steps_list:
         print(f"  PDE steps    : {stp:.1f}/12  "
-              f"{'✅' if stp <= 6 else '⏳'}  (target <6 on calm)")
+              f"{'[OK]' if stp <= 6 else '[INFO]'}  (target <6 on calm)")
 
     return results
 
@@ -881,13 +881,13 @@ def evaluate_policy(env, model: torch.nn.Module, n_episodes: int,
 
 def main():
     parser = argparse.ArgumentParser(
-        description="FluidVLA Step 2 — Pick & Place Environment"
+        description="FluidVLA Step 2 - Pick & Place Environment"
     )
     parser.add_argument('--mode', default='synthetic',
                         choices=['collect', 'eval', 'synthetic', 'debug'])
     parser.add_argument('--episodes',   default=500,  type=int)
     parser.add_argument('--checkpoint', default=None)
-    parser.add_argument('--save_dir',   default='./data/step2')
+    parser.add_argument('--save_dir',   default='./data/step2_sim')
     parser.add_argument('--image_size', default=224,  type=int)
     parser.add_argument('--show_gui',   action='store_true',
                         help='Show Isaac Sim 3D window (disables headless mode)')
@@ -897,7 +897,7 @@ def main():
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"\n{'='*60}")
-    print(f"FluidVLA — Step 2 Pick & Place")
+    print(f"FluidVLA - Step 2 Pick & Place")
     print(f"  Mode:   {args.mode}")
     print(f"  Device: {device}")
     print(f"  Dir:    {args.save_dir}")
@@ -949,7 +949,7 @@ def main():
         out_file.parent.mkdir(parents=True, exist_ok=True)
         with open(out_file, 'w') as f:
             json.dump(results, f, indent=2)
-        print(f"\nResults saved → {out_file}")
+        print(f"\nResults saved -> {out_file}")
 
     # ── Cleanup ──
     if hasattr(env, 'close'):

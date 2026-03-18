@@ -9,7 +9,7 @@ ROLE IN THE ROADMAP:
   If it works here → pipeline OK → move to step2b/2c with Isaac.
 
 DATA PRODUCED → data/step2a_synthetic/
-CHECKPOINTS   → checkpoints/step2a/
+CHECKPOINTS   → checkpoints/step2a_synthetic/
 
 OBS FORMAT (identical to step2b/2c/3):
   frames  : torch.Tensor (1, 3, T, H, W)   float32  [0,1]

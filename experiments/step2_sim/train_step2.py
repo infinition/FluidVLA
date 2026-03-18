@@ -26,7 +26,7 @@ Equilibrium regularization (Option B):
   prioritize action accuracy over compute savings.
 
 Dataset format (produced by isaac_env.py):
-  data/step2/
+    data/step2_sim/
     episode_0000.npz   # frames=(steps, 3, T, H, W), proprios=(steps, 8), actions=(steps, 7), reward=(1,)
     episode_0001.npz
     ...
@@ -37,10 +37,10 @@ Usage:
   python experiments/step2_sim/isaac_env.py --mode synthetic --episodes 1000 --image_size 64
 
   # Train with equilibrium regularization
-  python experiments/step2_sim/train_step2.py --dataset ./data/step2 --epochs 50 --batch_size 32 --d_model 128
+    python experiments/step2_sim/train_step2.py --dataset ./data/step2_sim --epochs 50 --batch_size 32 --d_model 128
 
   # Stronger equilibrium pressure (more aggressive early-stopping)
-  python experiments/step2_sim/train_step2.py --dataset ./data/step2 --epochs 50 --eq_weight 0.05
+    python experiments/step2_sim/train_step2.py --dataset ./data/step2_sim --epochs 50 --eq_weight 0.05
 """
 
 import os
@@ -60,7 +60,7 @@ import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from src.core.fluid_model import FluidBotVLA
+from fluidvla.core import FluidBotVLA
 
 
 # ─────────────────────────────────────────
@@ -350,7 +350,7 @@ def benchmark_latency(model, device, image_size=64, n_frames=4, n_runs=200):
     fps      = 1000.0 / mean_lat if mean_lat > 0 else 0
 
     print(f"\n{'='*55}")
-    print(f"LATENCY BENCHMARK — FluidVLA Step 2")
+    print(f"LATENCY BENCHMARK - FluidVLA Step 2")
     print(f"  Input: (1, 3, {n_frames}, {image_size}, {image_size})")
     print(f"{'='*55}")
     print(f"  Mean       : {mean_lat:.2f} ms")
@@ -362,7 +362,7 @@ def benchmark_latency(model, device, image_size=64, n_frames=4, n_runs=200):
     print(f"  Turbulence : {pde_turb:.4f}")
 
     target = 50.0
-    status = "✅" if mean_lat < target else "❌"
+    status = "[OK]" if mean_lat < target else "[FAIL]"
     print(f"  {status} RTX target (<{target}ms): {mean_lat:.2f}ms")
 
     return {
@@ -413,9 +413,9 @@ def benchmark_adaptive_compute(model, device, image_size=64, n_frames=4):
 
     if steps_s < steps_d:
         saved = (1 - steps_s / steps_d) * 100
-        print(f"  ✅ Adaptive compute active: {saved:.0f}% fewer steps on static")
+        print(f"  [OK] Adaptive compute active: {saved:.0f}% fewer steps on static")
     else:
-        print(f"  ⏳ Adaptive compute not yet differentiating (needs more training)")
+        print(f"  [INFO] Adaptive compute not yet differentiating (needs more training)")
 
     return {
         'static_steps':  float(steps_s),
@@ -432,7 +432,7 @@ def benchmark_adaptive_compute(model, device, image_size=64, n_frames=4):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='FluidVLA Step 2 — Imitation Learning (Pick & Place)'
+        description='FluidVLA Step 2 - Imitation Learning (Pick & Place)'
     )
     parser.add_argument('--dataset',    required=True,
                         help='Path to dataset dir from isaac_env.py')
@@ -449,7 +449,7 @@ def main():
                              '0.01=mild, 0.05=strong)')
     parser.add_argument('--image_size', default=None,  type=int,
                         help='Image size (auto-detected from data if omitted)')
-    parser.add_argument('--save_dir',   default='./checkpoints/step2')
+    parser.add_argument('--save_dir',   default='./checkpoints/step2_sim')
     parser.add_argument('--benchmark',  action='store_true',
                         help='Run latency benchmark only')
     parser.add_argument('--checkpoint', default=None,
@@ -487,7 +487,7 @@ def main():
         print(f"Metadata: {json.dumps(meta, indent=2)}")
 
     print(f"\n{'='*60}")
-    print(f"FluidVLA Step 2 — Imitation Learning (Pick & Place)")
+    print(f"FluidVLA Step 2 - Imitation Learning (Pick & Place)")
     print(f"{'='*60}")
 
     # ── Resume checkpoint (loaded before model init) ──
@@ -556,7 +556,7 @@ def main():
     )
 
     if len(dataset) == 0:
-        print("\n❌ No training samples! Check your dataset or use --all_episodes")
+        print("\n[FAIL] No training samples! Check your dataset or use --all_episodes")
         return
 
     # Train/val split (90/10)
@@ -591,20 +591,20 @@ def main():
             optimizer.load_state_dict(ckpt['optimizer'])
             print("  Optimizer state restored")
         except Exception:
-            print("  ⚠️ Could not restore optimizer state, starting fresh")
+            print("  [WARN] Could not restore optimizer state, starting fresh")
 
     os.makedirs(args.save_dir, exist_ok=True)
     best_val_mse = float('inf')
     history      = []
 
     # ── Pre-training adaptive compute check ──
-    print(f"\n{'─'*60}")
+    print(f"\n{'-'*60}")
     print("Pre-training adaptive compute check...")
     benchmark_adaptive_compute(model, device, image_size=image_size, n_frames=n_frames)
 
-    print(f"\n{'─'*60}")
+    print(f"\n{'-'*60}")
     print("Training...")
-    print(f"{'─'*60}")
+    print(f"{'-'*60}")
 
     for epoch in range(start_epoch, start_epoch + args.epochs):
         t0 = time.time()
@@ -630,12 +630,12 @@ def main():
         # Adaptive compute check
         if val_metrics['avg_steps'] < args.max_steps * 0.8:
             saved = (1 - val_metrics['avg_steps'] / args.max_steps) * 100
-            print(f"  ✅ Adaptive compute: {val_metrics['avg_steps']:.1f}/12 "
+            print(f"  [OK] Adaptive compute: {val_metrics['avg_steps']:.1f}/12 "
                   f"({saved:.0f}% compute saved)")
 
         # Latency check
         if val_metrics['latency_ms'] < 50.0:
-            print(f"  ✅ Latency: {val_metrics['latency_ms']:.1f}ms < 50ms")
+            print(f"  [OK] Latency: {val_metrics['latency_ms']:.1f}ms < 50ms")
 
         # History
         record = {
@@ -674,7 +674,7 @@ def main():
                     'proprio_dim': 8,
                 },
             }, save_path)
-            print(f"  💾 Best model saved (val_mse={best_val_mse:.5f})")
+            print(f"  [SAVE] Best model saved (val_mse={best_val_mse:.5f})")
 
         # Periodic checkpoint every 10 epochs
         if epoch % 10 == 0:
@@ -714,11 +714,11 @@ def main():
     # Key claim validation
     if adapt['static_steps'] < adapt['dynamic_steps']:
         ratio = adapt['dynamic_steps'] / max(adapt['static_steps'], 1)
-        print(f"\n  🎯 ADAPTIVE COMPUTE VALIDATED: "
+        print(f"\n  [OK] ADAPTIVE COMPUTE VALIDATED: "
               f"static={adapt['static_steps']:.1f} vs dynamic={adapt['dynamic_steps']:.1f} "
               f"({ratio:.1f}x ratio)")
     else:
-        print(f"\n  ⏳ Adaptive compute not yet visible — try more epochs or higher eq_weight")
+        print(f"\n  [INFO] Adaptive compute not yet visible - try more epochs or higher eq_weight")
 
     print(f"\nNext steps:")
     print(f"  Evaluate: python experiments/step2_sim/isaac_env.py "

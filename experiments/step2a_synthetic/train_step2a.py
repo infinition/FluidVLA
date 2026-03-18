@@ -1,30 +1,30 @@
 """
-train_step2a.py — Step 2a : Imitation Learning on synthetic data
-────────────────────────────────────────────────────────────────────────
+train_step2a.py -- Step 2a: Imitation Learning on synthetic data
+------------------------------------------------------------------------
 Trains FluidBotVLA on demos collected by synthetic_env.py.
 
-DATA   → data/step2a_synthetic/
-CHECKPOINTS → checkpoints/step2a/
+DATA   -> data/step2a_synthetic/
+CHECKPOINTS -> checkpoints/step2a_synthetic/
 
 PROVEN RESULTS (Step 2a) :
   Validation MSE : 0.01345  (epoch 48/50)
-  Latence        : ~4.1ms   (~244 FPS sur RTX 4070 Ti)
+  Latency        : ~4.1ms   (~244 FPS on RTX 4070 Ti)
   Adaptive compute : 1/12 steps, 92% compute saved (eq_weight=0.1)
 
 IMPORTANT CLI FLAGS :
   --no_pde      Disables the Laplacian (see fluid_layer.py)
                 Useful if training is unstable or for diagnostics.
-                Actions are still predicted — only spatial diffusion
+                Actions are still predicted -- only spatial diffusion
                 is disabled. Result: pure residual MLP.
 
   --eq_weight   Equilibrium regularization weight (default 0.1)
-                0.0  → no pressure towards early stopping
-                0.01 → light pressure
-                0.1  → strong pressure (paper result)
+                0.0  -> no pressure towards early stopping
+                0.01 -> light pressure
+                0.1  -> strong pressure (paper result)
 
   --epsilon     Turing Equilibrium threshold (default 0.02)
-                0.0  → early stopping disabled (always max_steps)
-                1e9  → stops after 1 step (max speed)
+                0.0  -> early stopping disabled (always max_steps)
+                1e9  -> stops after 1 step (max speed)
 
 EXAMPLES :
   # Collect synthetic demos (from this directory)
@@ -39,7 +39,7 @@ EXAMPLES :
   # Fine-tune from step2a checkpoint to step2c
   python ../step2c_isaac_collect/train_step2c.py \
       --dataset ../../data/step2c_isaac \
-      --checkpoint ../../checkpoints/step2a/best.pt
+    --checkpoint ../../checkpoints/step2a_synthetic/best.pt
 """
 
 import os, sys, time, json, glob, argparse
@@ -54,20 +54,20 @@ import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from src.core.fluid_model import FluidBotVLA
+from fluidvla.core import FluidBotVLA
 
 # Reuse constants from the synthetic env
 sys.path.insert(0, str(Path(__file__).parent))
 from synthetic_env import ACTION_DIM, PROPRIO_DIM, N_FRAMES
 
-# ─── Dataset ────────────────────────────────────────────────────────────────
+# --- Dataset -----------------------------------------------------------------
 
 class PickPlaceDataset(Dataset):
     """
     Loads .npz episodes produced by synthetic_env.py or isaac_env.py.
 
     Expected format per episode:
-        frames   : (steps, 3, T, H, W)  float16 ou float32
+        frames   : (steps, 3, T, H, W)  float16 or float32
         proprios : (steps, 8)            float32
         actions  : (steps, 7)            float32
         reward   : (1,)                  float32
@@ -118,12 +118,12 @@ class PickPlaceDataset(Dataset):
         return frames, proprio, action
 
 
-# ─── Equilibrium loss ────────────────────────────────────────────────────────
+# --- Equilibrium loss --------------------------------------------------------
 
 def compute_equilibrium_loss(info_list) -> torch.Tensor:
     """
     Penalizes the average turbulence (differentiable).
-    Forces the model to converge fast → effective early-stopping.
+    Forces the model to converge fast -> effective early-stopping.
     Analogous to the ponder cost in Graves (2016) ACT.
     """
     diff_turbs = [
@@ -133,7 +133,7 @@ def compute_equilibrium_loss(info_list) -> torch.Tensor:
     return torch.stack(diff_turbs).mean() if diff_turbs else torch.tensor(0.0)
 
 
-# ─── Training loop ──────────────────────────────────────────────────────────
+# --- Training loop -----------------------------------------------------------
 
 def train_one_epoch(model, loader, optimizer, scheduler, scaler, device, epoch, eq_weight):
     model.train()
@@ -196,13 +196,13 @@ def evaluate(model, loader, device):
     }
 
 
-# ─── Main ────────────────────────────────────────────────────────────────────
+# --- Main --------------------------------------------------------------------
 
 def main():
-    parser = argparse.ArgumentParser(description='FluidVLA Step 2a — Synthetic Imitation Learning')
+    parser = argparse.ArgumentParser(description='FluidVLA Step 2a -- Synthetic Imitation Learning')
     parser.add_argument('--dataset',       required=True,
                         help='Path to data/step2a_synthetic/')
-    parser.add_argument('--save_dir',      default='../../checkpoints/step2a')
+    parser.add_argument('--save_dir',      default='../../checkpoints/step2a_synthetic')
     parser.add_argument('--epochs',        default=50,   type=int)
     parser.add_argument('--batch_size',    default=32,   type=int)
     parser.add_argument('--lr',            default=3e-4, type=float)
@@ -214,11 +214,11 @@ def main():
     parser.add_argument('--epsilon',       default=0.02, type=float,
                         help='Turing Equilibrium threshold (0=always max_steps)')
     parser.add_argument('--image_size',    default=None, type=int)
-    # ── PDE ON/OFF ────────────────────────────────────────────────────────────
+    # -- PDE ON/OFF ---------------------------------------------------------------
     parser.add_argument('--no_pde', action='store_true',
                         help='Disables the Laplacian term (diagnostic/fallback). '
                              'See fluid_layer.py for complete documentation.')
-    # ─────────────────────────────────────────────────────────────────────────
+    # -------------------------------------------------------------------------
     parser.add_argument('--checkpoint',    default=None)
     parser.add_argument('--all_episodes',  action='store_true')
     args = parser.parse_args()
@@ -239,8 +239,8 @@ def main():
     image_size = image_size or 64
 
     print(f"\n{'='*60}")
-    print(f"FluidVLA Step 2a — Synthetic Imitation Learning")
-    print(f"  use_pde    : {use_pde}  {'(Laplacian active)' if use_pde else '(PDE DISABLED — diagnostic mode)'}")
+    print(f"FluidVLA Step 2a - Synthetic Imitation Learning")
+    print(f"  use_pde    : {use_pde}  {'(Laplacian active)' if use_pde else '(PDE DISABLED - diagnostic mode)'}")
     print(f"  image_size : {image_size}  | n_frames : {n_frames}")
     print(f"  d_model    : {args.d_model} | n_layers : {args.n_layers}")
     print(f"  eq_weight  : {args.eq_weight} | epsilon : {args.epsilon}")
@@ -299,7 +299,7 @@ def main():
 
         if vm['steps'] < args.max_steps * 0.8:
             saved = (1 - vm['steps'] / args.max_steps) * 100
-            print(f"  ✅ Adaptive compute : {vm['steps']:.1f}/12 ({saved:.0f}% compute saved)")
+            print(f"  [OK] Adaptive compute : {vm['steps']:.1f}/12 ({saved:.0f}% compute saved)")
 
         history.append({'epoch': epoch, **tm, 'val_mse': vm['mse'],
                         'val_steps': vm['steps'], 'val_lat': vm['latency_ms']})
@@ -317,19 +317,19 @@ def main():
                     'use_pde': use_pde,
                 }
             }, os.path.join(args.save_dir, 'best.pt'))
-            print(f"  💾 Best model saved (val_mse={best_mse:.5f})")
+            print(f"  [SAVE] Best model saved (val_mse={best_mse:.5f})")
 
     with open(os.path.join(args.save_dir, 'history.json'), 'w') as f:
         json.dump(history, f, indent=2)
 
     print(f"\n{'='*60}")
-    print(f"TRAINING COMPLETE — Step 2a")
+    print(f"TRAINING COMPLETE - Step 2a")
     print(f"  Best val MSE : {best_mse:.5f}")
     print(f"  use_pde      : {use_pde}")
     print(f"  Checkpoint   : {args.save_dir}/best.pt")
-    print(f"\nNext → Step 2b : Isaac Sim camera validation")
+    print(f"\nNext -> Step 2b : Isaac Sim camera validation")
     print(f"  python ../step2b_isaac_validate/camera_check.py --episodes 10")
-    print(f"Next → Step 2c : Isaac Sim physical collection")
+    print(f"Next -> Step 2c : Isaac Sim physical collection")
     print(f"  python ../step2c_isaac_collect/train_step2c.py \\")
     print(f"      --dataset ../../data/step2c_isaac \\")
     print(f"      --checkpoint {args.save_dir}/best.pt")

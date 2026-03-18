@@ -33,7 +33,7 @@ from pathlib import Path
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from src.core.fluid_model import FluidBotClassifier
+from fluidvla.core import FluidBotClassifier
 
 
 def get_dataset(name: str, data_dir: str = './data'):
@@ -84,13 +84,14 @@ def train_one_epoch(model, loader, optimizer, scheduler, device, scaler, epoch):
     correct    = 0
     total      = 0
     avg_steps  = 0.0
+    amp_device = 'cuda' if device.type == 'cuda' else 'cpu'
     
     for batch_idx, (images, labels) in enumerate(loader):
         images, labels = images.to(device), labels.to(device)
         
         optimizer.zero_grad()
         
-        with torch.cuda.amp.autocast(enabled=(device.type == 'cuda')):
+        with torch.amp.autocast(device_type=amp_device, enabled=(device.type == 'cuda')):
             logits, info = model(images)
             loss = nn.functional.cross_entropy(logits, labels)
         
@@ -153,7 +154,7 @@ def benchmark_memory_scaling(model, device):
     print("=" * 50)
     
     if not torch.cuda.is_available():
-        print("(Skip — CUDA not available)")
+        print("(Skip - CUDA not available)")
         return
     
     model.eval()
@@ -170,7 +171,7 @@ def benchmark_memory_scaling(model, device):
         mem_mb = torch.cuda.max_memory_allocated() / 1e6
         n_pixels = H * H
         results.append((H, n_pixels, mem_mb))
-        print(f"  {H:4d}×{H:4d} | N={n_pixels:7,} px | VRAM: {mem_mb:7.1f} MB")
+        print(f"  {H:4d}x{H:4d} | N={n_pixels:7,} px | VRAM: {mem_mb:7.1f} MB")
     
     # Check linearity: ratio of VRAM / N should be roughly constant
     ratios = [r[2] / r[1] for r in results]
@@ -178,9 +179,9 @@ def benchmark_memory_scaling(model, device):
     print(f"\n  VRAM/N ratio variation: {ratio_variation:.2f}x (ideal: 1.0x, <3x is good)")
     
     if ratio_variation < 5.0:
-        print("  ✅ Memory scaling is approximately linear")
+        print("  [OK] Memory scaling is approximately linear")
     else:
-        print("  ⚠️  Memory scaling may be super-linear — investigate")
+        print("  [WARN] Memory scaling may be super-linear - investigate")
     
     return results
 
@@ -219,13 +220,13 @@ def benchmark_adaptive_compute(model, device):
     print(f"  Random noise   : avg_steps = {info_complex['avg_steps']:.2f}")
     
     if info_simple['avg_steps'] <= info_complex['avg_steps']:
-        print("  ✅ Adaptive compute: simple inputs use ≤ steps than complex")
+        print("  [OK] Adaptive compute: simple inputs use <= steps than complex")
     else:
-        print("  ⚠️  Adaptive compute not differentiating inputs yet (expected early in training)")
+        print("  [WARN] Adaptive compute not differentiating inputs yet (expected early in training)")
 
 
 def main():
-    parser = argparse.ArgumentParser(description='FluidBot Step 0 — Image Classification')
+    parser = argparse.ArgumentParser(description='FluidBot Step 0 - Image Classification')
     parser.add_argument('--dataset',    default='cifar10',  choices=['mnist', 'cifar10'])
     parser.add_argument('--model',      default='small',    choices=['tiny', 'small', 'base'])
     parser.add_argument('--epochs',     default=50,         type=int)
@@ -240,7 +241,7 @@ def main():
     
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"\n{'='*60}")
-    print(f"FluidBot Step 0 — {args.dataset.upper()} Classification")
+    print(f"FluidBot Step 0 - {args.dataset.upper()} Classification")
     print(f"{'='*60}")
     print(f"Device   : {device}")
     print(f"Dataset  : {args.dataset}")
@@ -276,16 +277,16 @@ def main():
     optimizer = optim.AdamW(model.parameters(), lr=args.lr, weight_decay=0.05)
     total_steps = args.epochs * len(train_loader)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=total_steps)
-    scaler = torch.cuda.amp.GradScaler(enabled=(device.type == 'cuda'))
+    scaler = torch.amp.GradScaler('cuda', enabled=(device.type == 'cuda'))
     
     # Training loop
     os.makedirs(args.save_dir, exist_ok=True)
     best_acc = 0.0
     history  = []
     
-    print(f"\n{'─'*60}")
+    print(f"\n{'-'*60}")
     print("Starting training...")
-    print(f"{'─'*60}")
+    print(f"{'-'*60}")
     
     for epoch in range(1, args.epochs + 1):
         t0 = time.time()
@@ -306,7 +307,7 @@ def main():
         
         # Key check: eval steps should be ≤ train steps (adaptive compute works)
         if test_metrics['avg_steps'] < train_metrics['avg_steps']:
-            print(f"  ✅ Adaptive: eval uses {train_metrics['avg_steps'] - test_metrics['avg_steps']:.1f} fewer steps")
+            print(f"  [OK] Adaptive: eval uses {train_metrics['avg_steps'] - test_metrics['avg_steps']:.1f} fewer steps")
         
         record = {
             'epoch'       : epoch,
@@ -328,20 +329,20 @@ def main():
                 'acc'      : best_acc,
                 'config'   : cfg,
             }, os.path.join(args.save_dir, f'best_{args.dataset}.pt'))
-            print(f"  💾 Saved best model (acc={100*best_acc:.2f}%)")
+            print(f"  [SAVE] Saved best model (acc={100*best_acc:.2f}%)")
     
     # Final report
     print(f"\n{'='*60}")
-    print(f"FINAL RESULTS — {args.dataset.upper()}")
+    print(f"FINAL RESULTS - {args.dataset.upper()}")
     print(f"{'='*60}")
     print(f"Best test accuracy: {100*best_acc:.2f}%")
     
     targets = {'mnist': 98.0, 'cifar10': 70.0}
     target  = targets[args.dataset]
     if 100 * best_acc >= target:
-        print(f"✅ Target ({target}%) ACHIEVED")
+        print(f"[OK] Target ({target}%) ACHIEVED")
     else:
-        print(f"❌ Target ({target}%) NOT reached — investigate architecture")
+        print(f"[FAIL] Target ({target}%) NOT reached - investigate architecture")
     
     # Post-training benchmarks
     benchmark_adaptive_compute(model, device)

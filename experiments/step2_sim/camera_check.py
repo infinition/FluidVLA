@@ -10,11 +10,11 @@ Usage:
   python experiments/step2_sim/camera_check.py --mode synthetic   # test without Isaac Sim
 
 What this script validates:
-  ✅ Non-black frames (max > 0.01)
-  ✅ Visible objects (red + green detectable by color)
-  ✅ Temporal consistency (frames T=0..3 consistent)
-  ✅ Inter-episode stability
-  ✅ Capture latency
+  PASS Non-black frames (max > 0.01)
+  PASS Visible objects (red + green detectable by color)
+  PASS Temporal consistency (frames T=0..3 consistent)
+  PASS Inter-episode stability
+  PASS Capture latency
 """
 
 import sys
@@ -55,7 +55,7 @@ def frame_stats(frame: np.ndarray) -> dict:
 def check_temporal_consistency(frames_thwc: np.ndarray) -> dict:
     """
     frames_thwc : (T, H, W, 3)
-    Verifies that the 4 temporal frames are consistent with each other.
+    Verify that the 4 temporal frames are consistent with each other.
     """
     T = frames_thwc.shape[0]
     diffs = []
@@ -75,7 +75,7 @@ def check_temporal_consistency(frames_thwc: np.ndarray) -> dict:
 
 def generate_report(episodes_data: list, output_dir: Path, mode: str):
     """
-    Generates camera_report.png with:
+    Generate camera_report.png with:
       - Frame grid for each episode (start, mid, end step)
       - Stats graph (max brightness per step)
       - Summary table
@@ -83,7 +83,7 @@ def generate_report(episodes_data: list, output_dir: Path, mode: str):
     output_dir.mkdir(parents=True, exist_ok=True)
     n_ep = len(episodes_data)
 
-    print(f"\n📊 Generating report ({n_ep} episodes)...")
+    print(f"\nGenerating report ({n_ep} episodes)...")
 
     # ── Main figure: frames grid ──
     steps_to_show = ['first', 'mid', 'last']
@@ -120,7 +120,7 @@ def generate_report(episodes_data: list, output_dir: Path, mode: str):
 
         col_idx = 0
         for moment in steps_to_show:
-            frames_t = frames_by_step.get(moment)  # (4, H, W, 3) ou None
+            frames_t = frames_by_step.get(moment)  # (4, H, W, 3) or None
 
             for t in range(4):
                 ax = fig.add_subplot(gs[row, col_idx])
@@ -130,7 +130,7 @@ def generate_report(episodes_data: list, output_dir: Path, mode: str):
                     ax.imshow(img)
                     stats = frame_stats(img)
                     color = 'red' if stats['black'] else ('green' if (stats['has_red'] or stats['has_green']) else 'orange')
-                    indicator = '⬛' if stats['black'] else ('🔴🟢' if (stats['has_red'] or stats['has_green']) else '⬜')
+                    indicator = 'BLK' if stats['black'] else ('R+G' if (stats['has_red'] or stats['has_green']) else 'WHT')
                     ax.set_title(f'Ep{ep_idx} {indicator}\nmax={stats["max"]:.2f}',
                                 fontsize=6, color=color, pad=2)
                 else:
@@ -142,7 +142,7 @@ def generate_report(episodes_data: list, output_dir: Path, mode: str):
     frames_path = output_dir / 'camera_frames.png'
     fig.savefig(frames_path, dpi=100, bbox_inches='tight')
     plt.close(fig)
-    print(f"  ✅ Frames → {frames_path}")
+    print(f"  [OK] Frames -> {frames_path}")
 
     # ── Stats figure: brightness per step ──
     fig2, axes = plt.subplots(2, 1, figsize=(14, 8))
@@ -186,7 +186,7 @@ def generate_report(episodes_data: list, output_dir: Path, mode: str):
     stats_path = output_dir / 'camera_stats.png'
     fig2.savefig(stats_path, dpi=100, bbox_inches='tight')
     plt.close(fig2)
-    print(f"  ✅ Stats  → {stats_path}")
+    print(f"  [OK] Stats  -> {stats_path}")
 
     # ── Text summary ──
     all_stats = [s for ep in episodes_data for s in ep['steps_stats']]
@@ -205,20 +205,20 @@ def generate_report(episodes_data: list, output_dir: Path, mode: str):
     print(f"  Green target  : {n_green}/{n_total} ({100*n_green/max(n_total,1):.1f}%)")
 
     if n_black == 0:
-        print(f"\n  ✅ Camera OK — no black frames")
+        print(f"\n  [OK] Camera OK - no black frames")
     elif n_black < n_total * 0.1:
-        print(f"\n  ⚠️  A few black frames (warm-up) — acceptable")
+        print(f"\n  [WARN] A few black frames (warm-up) - acceptable")
     else:
-        print(f"\n  ❌ Too many black frames — unresolved camera issue")
+        print(f"\n  [FAIL] Too many black frames - unresolved camera issue")
 
     if n_red > n_total * 0.3:
-        print(f"  ✅ Red cube visible in {100*n_red/n_total:.0f}% of frames")
+        print(f"  [OK] Red cube visible in {100*n_red/n_total:.0f}% of frames")
     else:
-        print(f"  ❌ Red cube NOT visible — camera misoriented or scene poorly lit")
+        print(f"  [FAIL] Red cube NOT visible - camera misoriented or scene poorly lit")
 
     verdict = (n_black == 0 or n_black < n_total * 0.1) and n_red > n_total * 0.3
     print(f"\n{'='*55}")
-    print(f"  VERDICT : {'✅ READY for 1000 episode collection' if verdict else '❌ FIX camera before collection'}")
+    print(f"  VERDICT : {'[OK] READY for 1000 episode collection' if verdict else '[FAIL] FIX camera before collection'}")
     print(f"{'='*55}")
 
     return verdict
@@ -229,7 +229,7 @@ def generate_report(episodes_data: list, output_dir: Path, mode: str):
 # ─────────────────────────────────────────
 
 def main():
-    parser = argparse.ArgumentParser(description='FluidVLA — Camera Validation')
+    parser = argparse.ArgumentParser(description='FluidVLA - Camera Validation')
     parser.add_argument('--mode',     default='collect',
                         choices=['collect', 'synthetic'],
                         help='collect=Isaac Sim, synthetic=without Isaac Sim')
@@ -243,7 +243,7 @@ def main():
 
     # ── Load environment ──
     print(f"\n{'='*55}")
-    print(f"FluidVLA — Camera Validation")
+    print(f"FluidVLA - Camera Validation")
     print(f"  Mode      : {args.mode}")
     print(f"  Episodes  : {args.episodes}")
     print(f"  Output    : {output_dir}")
@@ -260,18 +260,18 @@ def main():
 
     if args.mode == 'synthetic':
         env = SyntheticPickPlace(args.image_size, N_FRAMES)
-        print("✅ Synthetic environment loaded")
+        print("[OK] Synthetic environment loaded")
     else:
         env = IsaacPickPlace(headless=True, image_size=args.image_size, n_frames=N_FRAMES)
         if not env.available:
-            print("⚠️  Isaac Sim not available — synthetic fallback")
+            print("[WARN] Isaac Sim not available - synthetic fallback")
             env = SyntheticPickPlace(args.image_size, N_FRAMES)
 
     # ── Collect episodes ──
     episodes_data = []
 
     for ep in range(args.episodes):
-        print(f"\n── Episode {ep+1}/{args.episodes} ──")
+        print(f"\n-- Episode {ep+1}/{args.episodes} --")
         obs = env.reset()
         done = False
         step = 0
@@ -331,9 +331,9 @@ def main():
 
         n_black = sum(1 for s in steps_stats if s['black'])
         n_red   = sum(1 for s in steps_stats if s['has_red'])
-        status_cam   = '✅' if n_black == 0 else f'⚠️ {n_black} black'
-        status_red   = '✅' if n_red > 0 else '❌'
-        status_ok    = '✅' if reward > 0 else '❌'
+        status_cam   = '[OK]' if n_black == 0 else f'[WARN] {n_black} black'
+        status_red   = '[OK]' if n_red > 0 else '[FAIL]'
+        status_ok    = '[OK]' if reward > 0 else '[FAIL]'
 
         print(f"  Steps: {n} | Reward: {reward:.0f} {status_ok} | "
               f"Black frames: {status_cam} | Red cube: {status_red} | "
@@ -348,15 +348,15 @@ def main():
     if hasattr(env, 'close'):
         env.close()
 
-    print(f"\n📁 Complete report → {output_dir}/")
-    print(f"   camera_frames.png  — visual frames grid")
-    print(f"   camera_stats.png   — brightness / detection per step")
+    print(f"\n[DIR] Complete report -> {output_dir}/")
+    print(f"   camera_frames.png  - visual frames grid")
+    print(f"   camera_stats.png   - brightness / detection per step")
 
     if verdict and args.mode == 'collect':
-        print(f"\n🚀 Ready! Now run:")
+        print(f"\nReady! Now run:")
         print(f"   python experiments/step2_sim/isaac_env.py --mode collect --episodes 1000")
     elif not verdict:
-        print(f"\n🔧 Fix the camera, then relaunch this script.")
+        print(f"\nFix the camera, then relaunch this script.")
 
     return 0 if verdict else 1
 

@@ -22,7 +22,7 @@ USAGE:
 
   # Headless mode (log only, no GUI)
   python so101_urdf_viewer.py \\
-      --checkpoint ../../checkpoints/step2a/best.pt \\
+      --checkpoint ../../checkpoints/step2a_synthetic/best.pt \\
       --urdf /path/to/so101.urdf \\
       --headless
 
@@ -47,7 +47,7 @@ from typing import Optional, List
 import torch
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from src.core.fluid_model import FluidBotVLA
+from fluidvla.core import FluidBotVLA
 
 # Shared constants with step2a / step2c
 ACTION_DIM  = 7
@@ -124,7 +124,7 @@ class SO101IsaacViewer:
         if not result:
             raise RuntimeError(f"URDF import failed. Valid URDF path? {self.urdf_path}")
 
-        print(f"[Step 2d] ✅ SO-101 imported → {prim_path}")
+        print(f"[Step 2d] [OK] SO-101 imported -> {prim_path}")
 
         # Get articulation to control joints
         from omni.isaac.core.articulations import Articulation
@@ -152,7 +152,7 @@ class SO101IsaacViewer:
         self.available    = True
         self.n_joints     = self.robot_art.num_dof
         self.frame_buffer = []
-        print(f"[Step 2d] ✅ Viewer ready | {self.n_joints} joints detected")
+        print(f"[Step 2d] [OK] Viewer ready | {self.n_joints} joints detected")
 
     def get_joint_positions(self) -> np.ndarray:
         """Reads current joint positions (radians)."""
@@ -239,7 +239,7 @@ class SO101RerunViewer:
             rr.init("FluidVLA SO-101 Viewer", spawn=True)
             rr.log("robot/urdf", rr.Asset3D(path=urdf_path))
             self.available = True
-            print("[Step 2d] ✅ Rerun viewer launched")
+            print("[Step 2d] [OK] Rerun viewer launched")
         except ImportError:
             print("[Step 2d] Rerun not installed. pip install rerun-sdk")
         except Exception as e:
@@ -277,7 +277,7 @@ def run_inference_loop(viewer, model: FluidBotVLA, device: torch.device,
     all_actions = []
 
     print(f"\n{'='*55}")
-    print(f"Live inference SO-101 — {n_steps} steps")
+    print(f"Live inference SO-101 - {n_steps} steps")
     print(f"{'='*55}")
 
     for step in range(n_steps):
@@ -324,7 +324,7 @@ def run_inference_loop(viewer, model: FluidBotVLA, device: torch.device,
     print(f"  Latency p95      : {np.percentile(latencies, 95):.1f}ms")
     print(f"  Effective FPS    : {1000/np.mean(latencies):.0f}")
     print(f"  Avg PDE steps    : {np.mean(steps_list):.1f}/12")
-    print(f"  ✅" if np.mean(latencies) < 50 else "  ❌", "Latency <50ms")
+    print(f"  [OK]" if np.mean(latencies) < 50 else "  [FAIL]", "Latency <50ms")
 
     return {
         'latency_mean_ms': float(np.mean(latencies)),
@@ -338,7 +338,7 @@ def run_inference_loop(viewer, model: FluidBotVLA, device: torch.device,
 
 def main():
     parser = argparse.ArgumentParser(
-        description='FluidVLA Step 2d — Viewer 3D SO-101 URDF'
+        description='FluidVLA Step 2d - Viewer 3D SO-101 URDF'
     )
     parser.add_argument('--urdf', required=True,
                         help='Path to so101.urdf (see README.md)')
@@ -364,7 +364,7 @@ def main():
     device  = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     print(f"\n{'='*60}")
-    print(f"FluidVLA Step 2d — Viewer 3D SO-101 URDF")
+    print(f"FluidVLA Step 2d - Viewer 3D SO-101 URDF")
     print(f"  URDF      : {args.urdf}")
     print(f"  use_pde   : {use_pde}")
     print(f"  device    : {device}")
@@ -391,14 +391,14 @@ def main():
         model.load_state_dict(ckpt['model'])
         print(f"  Checkpoint loaded: {args.checkpoint} | use_pde={cfg_use_pde}")
     else:
-        # Random weights — pipeline test only
+        # Random weights - pipeline test only
         model = FluidBotVLA(
             image_size=args.image_size, d_model=128, n_layers=3,
             patch_size=max(4, args.image_size // 16),
             action_dim=ACTION_DIM, proprio_dim=PROPRIO_DIM,
             use_pde=use_pde,
         ).to(device)
-        print("  ⚠️  Random weights — actions will not be meaningful")
+        print("  [WARN] Random weights - actions will not be meaningful")
 
     p = model.count_parameters()
     print(f"  Params : {p['M']:.2f}M")
@@ -410,11 +410,11 @@ def main():
         viewer = SO101IsaacViewer(args.urdf, headless=not args.show_gui,
                                   image_size=args.image_size)
         if not viewer.available:
-            print("[Step 2d] Isaac Sim unavailable → Rerun fallback")
+            print("[Step 2d] Isaac Sim unavailable -> Rerun fallback")
             viewer = SO101RerunViewer(args.urdf, args.image_size)
 
     if not viewer.available:
-        print("[Step 2d] ❌ No viewer available.")
+        print("[Step 2d] [FAIL] No viewer available.")
         print("[Step 2d] Install Isaac Sim or: pip install rerun-sdk")
         print("[Step 2d] See README.md for options.")
         return
@@ -433,8 +433,8 @@ def main():
     os.makedirs(args.save_dir, exist_ok=True)
     with open(os.path.join(args.save_dir, 'inference_results.json'), 'w') as f:
         json.dump(results, f, indent=2)
-    print(f"\n  Results saved → {args.save_dir}/inference_results.json")
-    print(f"\nNext → Step 3: real Jetson Orin Nano hardware")
+    print(f"\n  Results saved -> {args.save_dir}/inference_results.json")
+    print(f"\nNext -> Step 3: real Jetson Orin Nano hardware")
     print(f"  python ../step3_lerobot/lerobot_inference.py \\")
     print(f"      --mode benchmark \\")
     print(f"      --checkpoint {args.save_dir}/../step2c_isaac/best.pt")

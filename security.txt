@@ -1,4 +1,0 @@
-Contact: https://github.com/infinition/FluidVLA/issues
-Expires: 2027-03-05T05:15:46.000Z
-Preferred-Languages: en, fr
-Policy: https://github.com/infinition/FluidVLA/blob/wiki/SECURITY.md

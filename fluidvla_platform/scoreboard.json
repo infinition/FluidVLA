@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "medical-step0-dice",
+      "experiment_id": "step1b_medical_msd",
+      "title": "Task01 BrainTumour | Best Val Dice PDE ON",
+      "metric_name": "best_val_dice",
+      "value": 0.9177,
+      "unit": "dice",
+      "direction": "max",
+      "source": "README.md / experiments/step1b_medical_msd/medical_step0_results_exhaustive.md",
+      "notes": "16 train / 4 val / 5 epochs, calibrated post-fix result.",
+      "updated_at": "2026-03-08T00:00:00+00:00"
+    },
+    {
+      "id": "medical-step0-latency",
+      "experiment_id": "step1b_medical_msd",
+      "title": "BRATS_001 central slice latency",
+      "metric_name": "latency_ms",
+      "value": 44.16,
+      "unit": "ms",
+      "direction": "min",
+      "source": "README.md / experiments/step1b_medical_msd/medical_step0_results_exhaustive.md",
+      "notes": "Central-slice inference, 6/6 steps, turbulence 0.2218.",
+      "updated_at": "2026-03-08T00:00:00+00:00"
+    },
+    {
+      "id": "medical-step0-pde-gain",
+      "experiment_id": "step1b_medical_msd",
+      "title": "PDE gain vs no PDE",
+      "metric_name": "delta_dice",
+      "value": 0.0048,
+      "unit": "dice",
+      "direction": "max",
+      "source": "README.md / experiments/step1b_medical_msd/medical_step0_results_exhaustive.md",
+      "notes": "Controlled PDE OFF 0.9129 vs PDE ON 0.9177 comparison.",
+      "updated_at": "2026-03-08T00:00:00+00:00"
+    }
+  ]
+}
