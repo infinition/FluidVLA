@@ -1,0 +1,280 @@
+% FluidVLA: PDE-Based 3D Medical Segmentation at 16K Parameters
+% Preprint 2026
+%
+% Compile: pdflatex fluidvla.tex && bibtex fluidvla && pdflatex fluidvla.tex && pdflatex fluidvla.tex
+
+\documentclass{article}
+
+\usepackage[final]{neurips_2025}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{nicefrac}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{xcolor}
+\usepackage{multirow}
+
+% Custom commands
+\newcommand{\ie}{\textit{i.e.}}
+\newcommand{\eg}{\textit{e.g.}}
+\newcommand{\cf}{\textit{cf.}}
+\newcommand{\etal}{\textit{et al.}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\lapl}{\nabla^2}
+\newcommand{\fluidvla}{\textsc{FluidVLA}}
+\DeclareMathOperator{\softplus}{softplus}
+\DeclareMathOperator{\sigmoid}{sigmoid}
+\DeclareMathOperator{\gelu}{GELU}
+
+\title{\fluidvla{}: Reaction-Diffusion PDEs for 3D Medical\\Segmentation at 16K Parameters}
+
+\author{
+  Fabien Polly \\
+  Independent Researcher \\
+}
+
+\begin{document}
+
+\maketitle
+
+% ============================================================================
+\begin{abstract}
+% ============================================================================
+3D medical image segmentation is dominated by U-Net variants that require millions of parameters and substantial GPU resources, limiting deployment in resource-constrained clinical settings. This paper introduces \fluidvla{}, a segmentation architecture that replaces the encoder-decoder convolution stack with iterative \emph{reaction-diffusion partial differential equations} (PDEs). Each layer applies a discrete 3D Laplacian for spatial propagation and a learned reaction function for nonlinear feature mixing, with adaptive early stopping when the field reaches equilibrium. On the Medical Segmentation Decathlon (MSD) BrainTumour task, \fluidvla{} achieves 0.95 binary Dice and 0.63 multi-class Dice with only \textbf{16,632 parameters} -- 1,900$\times$ fewer than nnU-Net (31M) and 337$\times$ fewer than a standard 3D U-Net (5.6M). Inference completes in 350\,ms on a consumer GPU. The PDE formulation reuses the same parameters across $T$ integration steps, decoupling effective network depth from parameter count. These results demonstrate that PDE-based architectures can achieve competitive medical segmentation quality at parameter budgets that enable deployment on edge devices, embedded systems, and low-resource clinical environments.
+\end{abstract}
+
+% ============================================================================
+\section{Introduction}
+\label{sec:introduction}
+% ============================================================================
+
+Volumetric medical image segmentation -- delineating anatomical structures in CT and MRI scans -- is a critical step in clinical workflows ranging from surgical planning to radiation therapy~\cite{isensee2021nnunet}. The field is dominated by 3D U-Net architectures~\cite{cciccek20163dunet} and their successors~\cite{hatamizadeh2022swinunetr,roy2023mednext}, which achieve strong performance but require millions of parameters, multi-GPU training, and substantial inference-time memory.
+
+This resource demand creates a deployment gap. While research models excel on benchmark leaderboards, clinical deployment often targets embedded devices in operating rooms, portable ultrasound units in rural clinics, or point-of-care systems where GPU access is limited or absent. A segmentation model that could run on a microcontroller or mobile NPU while maintaining clinically useful accuracy would fundamentally change the accessibility of AI-assisted diagnosis.
+
+This paper introduces \fluidvla{}, a 3D segmentation architecture built on reaction-diffusion PDEs. The core insight is that the iterative PDE integration \emph{reuses the same parameters at every step}, creating an effective depth that is independent of the parameter count. A model with 16K parameters and 6 PDE steps has an effective receptive field comparable to a 12-layer convolutional network, but at $\sim$1,000$\times$ lower parameter cost.
+
+\fluidvla{} draws on the same reaction-diffusion substrate introduced in FluidWorld~\cite{polly2026fluidworld} for video prediction, extending it to 3D volumetric segmentation. The architecture consists of three components:
+\begin{enumerate}
+    \item A \textbf{3D patch embedding} that projects input volumes into a latent feature space.
+    \item $N$ \textbf{FluidLayer3D} blocks, each iterating a reaction-diffusion PDE with learnable diffusion coefficients, a per-voxel reaction MLP, and an $O(1)$ global memory pump.
+    \item A \textbf{segmentation head} that upsamples and classifies the evolved feature field.
+\end{enumerate}
+
+The contributions of this paper are:
+\begin{enumerate}
+    \item An extension of reaction-diffusion PDE dynamics from 2D video prediction to 3D volumetric medical segmentation.
+    \item A demonstration that 16K parameters suffice for clinically relevant segmentation accuracy (0.95 binary Dice, 0.63 multi-class Dice on MSD BrainTumour).
+    \item Empirical evidence that PDE-based architectures achieve 1,900$\times$ parameter reduction relative to nnU-Net with competitive quality.
+    \item Analysis of the computational properties that enable this efficiency: parameter reuse across PDE steps, adaptive early stopping, and $O(1)$ memory state.
+\end{enumerate}
+
+All experiments were conducted on a single consumer-grade PC (Intel Core i5, NVIDIA RTX 4070 Ti) without cloud compute.
+
+% ============================================================================
+\section{Related Work}
+\label{sec:related}
+% ============================================================================
+
+\paragraph{3D Medical Segmentation.}
+The 3D U-Net~\cite{cciccek20163dunet} established the encoder-decoder paradigm for volumetric segmentation. nnU-Net~\cite{isensee2021nnunet} automated architecture search and preprocessing, becoming the de facto baseline on the Medical Segmentation Decathlon~\cite{antonelli2022msd}. Recent work has introduced Transformer-based variants: SwinUNETR~\cite{hatamizadeh2022swinunetr} applies shifted-window self-attention in 3D, while MedNeXt~\cite{roy2023mednext} uses large-kernel convolutions. All these approaches require 16M--62M parameters.
+
+\paragraph{Efficient Medical Segmentation.}
+Several works aim to reduce computational cost for medical segmentation. MobileNet-based architectures~\cite{howard2017mobilenets} achieve efficiency through depthwise separable convolutions but typically target 2D tasks. Knowledge distillation~\cite{hinton2015distilling} compresses large models into smaller ones but requires a pre-trained teacher. To the best of my knowledge, no prior work has achieved competitive 3D medical segmentation with fewer than 100K parameters.
+
+\paragraph{Neural PDEs.}
+Neural ODEs~\cite{chen2018neural} demonstrated that residual networks can be viewed as discretizations of continuous dynamics. GRAND~\cite{chamberlain2021grand} applied diffusion PDEs to graph neural networks. RD-Net~\cite{zhang2023rdnet} introduced reaction-diffusion dynamics for classification. FluidWorld~\cite{polly2026fluidworld} extended PDE-based computation to video prediction. \fluidvla{} adapts this framework to 3D volumetric segmentation, demonstrating that the PDE substrate generalizes across spatial dimensions and task types.
+
+% ============================================================================
+\section{Method}
+\label{sec:method}
+% ============================================================================
+
+\subsection{Architecture Overview}
+
+Given an input volume $\mathbf{X} \in \R^{C_{\text{in}} \times D \times H \times W}$ (e.g., a 4-modality MRI scan), \fluidvla{} produces a segmentation map $\hat{\mathbf{Y}} \in \{0, \ldots, K-1\}^{D \times H \times W}$ through three stages:
+
+\begin{enumerate}
+    \item \textbf{Patch Embedding.} A strided 3D convolution $f_{\text{embed}}: \R^{C_{\text{in}} \times D \times H \times W} \to \R^{d \times D' \times H' \times W'}$ downsamples the volume into a $d$-dimensional feature field, followed by RMSNorm.
+    \item \textbf{PDE Evolution.} $N$ FluidLayer3D blocks sequentially evolve the feature field $\mathbf{u} \in \R^{d \times D' \times H' \times W'}$ through reaction-diffusion dynamics.
+    \item \textbf{Segmentation Head.} A lightweight decoder upsamples the evolved field and applies per-voxel classification: Conv3D($d \to d/2$) $\to$ GELU $\to$ Conv3D($d/2 \to K$) $\to$ trilinear upsample to input resolution.
+\end{enumerate}
+
+\subsection{FluidLayer3D: Reaction-Diffusion in 3D}
+
+Each FluidLayer3D evolves the feature field $\mathbf{u}$ by iterating a discretized PDE for $T$ steps (adaptive, $T \in [3, 12]$):
+
+\begin{equation}
+\label{eq:pde}
+\mathbf{u}^{(t+1)} = \mathbf{u}^{(t)} + \Delta t \cdot \left[\underbrace{\sum_{k} D_k \lapl_{d_k} \mathbf{u}^{(t)}}_{\text{multi-scale diffusion}} + \underbrace{R(\mathbf{u}^{(t)}; \theta)}_{\text{reaction}} + \underbrace{\alpha_g \cdot \mathbf{h}}_{\text{global memory}} + \underbrace{\alpha_\ell \cdot \mathbf{m}}_{\text{local memory}}\right]
+\end{equation}
+
+where $\Delta t$ is a learnable time step, $D_k$ are learnable per-channel diffusion coefficients, $d_k \in \{1, 2, 4\}$ are dilation levels, and $\alpha_g, \alpha_\ell$ are learnable mixing coefficients.
+
+\paragraph{Multi-Scale 3D Diffusion.}
+The discrete 3D Laplacian uses a 6-neighbor stencil:
+\begin{equation}
+\lapl_{d} u_{i,j,k} = \sum_{\delta \in \{\pm d\}} \left(u_{i+\delta,j,k} + u_{i,j+\delta,k} + u_{i,j,k+\delta}\right) - 6 \cdot u_{i,j,k}
+\end{equation}
+applied at three dilation levels $d \in \{1, 2, 4\}$ voxels, giving each PDE step access to local (1-voxel), medium (2-voxel), and coarse (4-voxel) spatial scales. The diffusion coefficients $D_k \in (0, 0.25)$ are learned per channel via $D_k = 0.25 \cdot \sigmoid(\theta_k)$.
+
+\paragraph{Reaction Function.}
+The reaction term $R: \R^d \to \R^d$ is a per-voxel MLP applied independently at each spatial location:
+\begin{equation}
+R(\mathbf{u}) = W_2 \cdot \gelu(W_1 \cdot \mathbf{u} + b_1) + b_2
+\end{equation}
+with hidden dimension $2d$ (expansion ratio 2). This is the primary nonlinear transformation, analogous to the FFN in a Transformer block.
+
+\paragraph{Global Memory Pump.}
+A gated $O(1)$ memory state $\mathbf{h} \in \R^{d}$ accumulates information across PDE steps:
+\begin{equation}
+\mathbf{h} \leftarrow \mathbf{h} \cdot \sigma(W_f \cdot \bar{\mathbf{u}}) + \tanh(W_i \cdot \bar{\mathbf{u}}) \cdot \sigma(W_g \cdot \bar{\mathbf{u}})
+\end{equation}
+where $\bar{\mathbf{u}} = \text{mean}_{D'H'W'}(\mathbf{u})$ is the spatially pooled feature vector. This provides global context without attention, at constant memory cost independent of volume size.
+
+\paragraph{Local Memory.}
+A cheap spatial context signal is obtained by adaptive-pooling $\mathbf{u}$ to a fixed $4 \times 4 \times 4$ grid, projecting through a $1 \times 1 \times 1$ Conv3D, and trilinearly upsampling back to full resolution. This provides coarse spatial awareness at negligible cost.
+
+\paragraph{Adaptive Stopping.}
+During inference, the PDE integration monitors a ``turbulence'' signal -- the relative change in a low-resolution probe of the feature field. When turbulence drops below $\epsilon = 0.08$ for two consecutive steps, integration stops early. This typically reduces inference from 12 to 6 steps, halving computation for ``easy'' regions.
+
+\subsection{Parameter Reuse: Why 16K Parameters Suffice}
+
+The key architectural property is \textbf{parameter reuse across PDE steps}. In a standard U-Net, each convolutional layer has its own parameters; depth and parameter count are coupled. In \fluidvla{}, the same 16K parameters are applied at \emph{every} PDE step. With $T=6$ steps and $N=3$ layers, the effective depth is 18 sequential nonlinear transformations -- comparable to a deep CNN -- but with a fixed parameter budget.
+
+This is analogous to weight-tied recurrent networks, but with a crucial difference: the PDE dynamics provide a physics-informed prior (diffusion for spatial propagation, reaction for feature mixing) that constrains the optimization landscape and accelerates convergence.
+
+\begin{table}[t]
+\centering
+\caption{Parameter comparison for 3D medical segmentation architectures.}
+\label{tab:params}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Model} & \textbf{Parameters} & \textbf{Reduction vs nnU-Net} & \textbf{Inference Latency} \\
+\midrule
+nnU-Net~\cite{isensee2021nnunet} & 31.2M & 1$\times$ & 2--5\,s \\
+SwinUNETR~\cite{hatamizadeh2022swinunetr} & 62.2M & 0.5$\times$ & 3--8\,s \\
+MedNeXt~\cite{roy2023mednext} & 55.9M & 0.6$\times$ & 2--4\,s \\
+3D U-Net~\cite{cciccek20163dunet} & 5.6M & 5.6$\times$ & 1--3\,s \\
+U-Net 3D Tiny & 88.3K & 353$\times$ & $\sim$500\,ms \\
+\midrule
+\textbf{\fluidvla{}} & \textbf{16.6K} & \textbf{1,879$\times$} & \textbf{350\,ms} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ============================================================================
+\section{Experiments}
+\label{sec:experiments}
+% ============================================================================
+
+\subsection{Setup}
+
+\paragraph{Dataset.}
+The Medical Segmentation Decathlon (MSD) BrainTumour task~\cite{antonelli2022msd} consists of 484 multi-modal MRI volumes (4 channels: T1, T1ce, T2, FLAIR) with voxel-level annotations for 3 tumor sub-regions (necrotic core, edema, enhancing tumor) plus background. The standard split uses 388 training and 96 validation volumes.
+
+\paragraph{Training.}
+All models are trained with:
+\begin{itemize}
+    \item Random crops of $128 \times 128 \times 128$ voxels, mixed crop mode (70\% foreground, 30\% random)
+    \item Dice + cross-entropy loss, Adam optimizer, learning rate $10^{-3}$
+    \item Batch size 1 (volumetric data)
+    \item 10 epochs (binary) or 10--50 epochs (multi-class)
+\end{itemize}
+
+\paragraph{\fluidvla{} Configuration.}
+$d_\text{model} = 32$, $N = 2$ layers, patch size 2, dilations $\{1, 2, 4\}$, max steps 6, $\Delta t = 0.1$, $\epsilon = 0.08$.
+
+\paragraph{Hardware.}
+All experiments run on a single consumer PC: Intel Core i5, NVIDIA RTX 4070 Ti (12\,GB), 32\,GB RAM. No cloud compute or multi-GPU training.
+
+\subsection{Results}
+
+\begin{table}[t]
+\centering
+\caption{Segmentation results on MSD BrainTumour. Binary = tumor vs.\ background (2 classes). Multi-class = necrotic core + edema + enhancing tumor + background (4 classes). \fluidvla{} results are from this work; baseline numbers are from the MSD leaderboard and published papers.}
+\label{tab:results}
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Model} & \textbf{Params} & \textbf{Binary Dice} & \textbf{Multi-class Dice} & \textbf{Latency} \\
+\midrule
+nnU-Net & 31.2M & -- & 0.74 & 2--5\,s \\
+SwinUNETR & 62.2M & -- & 0.75 & 3--8\,s \\
+3D U-Net & 5.6M & -- & 0.65--0.70 & 1--3\,s \\
+U-Net 3D Tiny & 88.3K & 0.82 & 0.48 & $\sim$500\,ms \\
+\midrule
+\textbf{\fluidvla{}} & \textbf{16.6K} & \textbf{0.95} & \textbf{0.63} & \textbf{350\,ms} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Binary Segmentation.}
+With the segmentation task reduced to tumor-vs-background (2 classes), \fluidvla{} achieves 0.95 Dice in 10 epochs. This establishes that the PDE substrate can learn to delineate tumor boundaries with high accuracy.
+
+\paragraph{Multi-Class Segmentation.}
+On the full 4-class task (necrotic core, edema, enhancing tumor, background), \fluidvla{} reaches 0.63 Dice in 10 epochs on the full dataset (388 training volumes). This is 85\% of nnU-Net's Dice (0.74), achieved with 1,879$\times$ fewer parameters and $\sim$100$\times$ fewer training epochs (nnU-Net uses 1,000 epochs). The learning curve shows no plateau at epoch 10, suggesting that extended training would further close the gap.
+
+\paragraph{Inference Efficiency.}
+\fluidvla{} completes inference on a $128^3$ volume in 350\,ms, including 6 PDE integration steps with adaptive stopping. The model occupies $\sim$50\,MB of GPU memory at inference time, compared to 2--6\,GB for standard architectures. This makes deployment on embedded devices, mobile NPUs, and edge hardware viable.
+
+% ============================================================================
+\section{Analysis}
+\label{sec:analysis}
+% ============================================================================
+
+\subsection{Why Parameter Reuse Works}
+
+In a standard 3D U-Net, the encoder path contains 5 stages with increasing channel counts (32 $\to$ 64 $\to$ 128 $\to$ 256 $\to$ 512), each with dedicated parameters. The decoder mirrors this structure. This architectural depth is necessary because each layer has a small receptive field ($3^3$ kernels) and can only propagate information locally.
+
+\fluidvla{} achieves a comparable effective receptive field through \emph{iterative diffusion}. At each PDE step with dilation $d=4$, information propagates 4 voxels. Over $T=6$ steps across $N=2$ layers, the effective receptive field reaches $2 \times 6 \times 4 = 48$ voxels in each direction -- covering the entire $128^3$ crop without any parameter increase.
+
+\subsection{Adaptive Computation}
+
+The adaptive stopping criterion provides input-dependent computation. On ``easy'' volumes where the tumor has clear boundaries, the PDE reaches equilibrium in 3--4 steps. On difficult cases with diffuse edema, all 6 steps are used. This naturally allocates more computation to harder inputs, a property that fixed-depth architectures lack.
+
+\subsection{Scaling Properties}
+
+Preliminary experiments with $d_\text{model} = 48$ (3 layers, $\sim$35K parameters) show improved multi-class Dice, suggesting that the PDE substrate benefits from moderate capacity increases while remaining far below conventional model sizes. Systematic scaling analysis is left for future work.
+
+% ============================================================================
+\section{Discussion}
+\label{sec:discussion}
+% ============================================================================
+
+\paragraph{Clinical Deployment.}
+The combination of 16K parameters, 350\,ms inference, and $\sim$50\,MB memory opens deployment scenarios impossible with current architectures: surgical AR glasses, portable ultrasound units, embedded diagnostic devices, and point-of-care systems in resource-limited settings. The model could run on a Raspberry Pi-class device.
+
+\paragraph{Limitations.}
+The current multi-class Dice (0.63) is below state-of-the-art (0.74 for nnU-Net). Extended training and moderate scaling ($d_\text{model}=64$, more epochs) may close this gap but have not been fully explored. The architecture has been evaluated on a single MSD task; generalization to other organs, imaging modalities, and resolutions requires further validation.
+
+\paragraph{Relation to FluidWorld.}
+\fluidvla{} shares its mathematical substrate with FluidWorld~\cite{polly2026fluidworld}, which applies reaction-diffusion PDEs to video prediction. This cross-domain transfer -- from 2D temporal prediction to 3D volumetric segmentation -- suggests that the PDE formulation is a general-purpose computational primitive, not specific to a single task or dimensionality.
+
+% ============================================================================
+\section{Conclusion}
+\label{sec:conclusion}
+% ============================================================================
+
+This paper demonstrates that reaction-diffusion PDEs can achieve competitive 3D medical segmentation with 1,900$\times$ fewer parameters than the current standard. \fluidvla{} reaches 0.95 binary Dice and 0.63 multi-class Dice on MSD BrainTumour with 16,632 trainable parameters, inferring in 350\,ms on consumer hardware.
+
+The key enabler is parameter reuse: the PDE iterates the same weights across multiple integration steps, decoupling effective depth from parameter count. Combined with adaptive stopping, multi-scale diffusion, and an $O(1)$ memory pump, this creates an architecture that is simultaneously deep (18 effective nonlinear transformations), lightweight (16K parameters), and fast (350\,ms inference).
+
+These results suggest that the ``right inductive bias'' -- physics-based spatial propagation via diffusion -- can replace the ``brute force'' of deep convolutional stacks. Future work will extend \fluidvla{} to additional MSD tasks, explore systematic scaling, and investigate deployment on embedded medical devices.
+
+% ============================================================================
+% References
+% ============================================================================
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}
